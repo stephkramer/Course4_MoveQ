@@ -163,7 +163,7 @@ an object called <my_packages> and only install the missing ones:
 
 Now load the packages:
 
-```{r libraries, warning=FALSE}
+```{r libraries, warning=FALSE, message=FALSE}
 library(here) #for easy directory management
 library(sp)
 library(dismo)
