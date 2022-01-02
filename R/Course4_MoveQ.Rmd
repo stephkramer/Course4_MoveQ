@@ -141,7 +141,7 @@ pkgs = c("here", "sp", "sf", "dismo", "raster", "GISTools",  "rgdal",
          "maptools", "rgeos","rgl","rasterVis", "adehabitatHR", "move", "tmap",
          "plotly", "circular","gganimate","moveVis", "ggmap", "maps", "mapproj",
          "viridis","dplyr", "devtools","lubridate", "patchwork",
-         "colorspace","ragg", "ggtext","pdftools", "units",
+         "colorspace","ragg", "ggtext","pdftools", "units", "leaflet",
          "glue", "cowplot", "tidyverse", "ggplot2", "Cairo") 
 
 # install.packages(pkgs) # only run this line once for installing the packages!
@@ -200,6 +200,7 @@ library(pdftools)
 library(units)
 library(ggplot2)
 library(patchwork) # to combine plots
+library(leaflet)
 ```
 
 ## Set the working environment
@@ -377,7 +378,7 @@ baseplot
 ```
 
 We can even add contour lines of the point density:
-TODO - error here - duplicated aes
+TODO - error here - duplicated aes - auch 1 missing point value???
 ```{r}
 densplot <- baseplot + stat_density_2d(
                          aes(x = st_coordinates(mydf_sf_trans)[,1], 
@@ -415,6 +416,35 @@ t <- get_map(location = b, maptype = "terrain", source='osm', zoom = 15)
   + labs(x="Latitude", y="Longitude", title="telemetry locations") 
 )
 
+```
+
+
+A nicer interactive plot with leaflet
+
+```{r}
+
+base_wgs84_x <- dat_anim_na$longitude[1]
+base_wgs84_y <- dat_anim_na$latitude[1]
+
+m_leaf <- leaflet(dat_anim_na) %>% 
+  addTiles() %>%
+  addMarkers(lng=base_wgs84_x, lat=base_wgs84_y, 
+             popup="Start") %>%
+  addPopups(base_wgs84_x, base_wgs84_y, 'Starting point',
+            options = popupOptions(closeButton = TRUE))%>%
+  addCircles(lng = ~longitude, lat = ~latitude,~5,
+             stroke = T,
+             color= 'white',
+             weight=1,
+             fill=T, 
+             fillColor= 'blue',
+             fillOpacity = 0.3) 
+m_leaf # leaflet is bad for export -> create them in ggmap instead!
+
+# no background: leaflet(dat_anim_na) %>% addCircles(lng = ~longitude, lat = ~latitude)
+
+# get more inspiration here:
+# https://github.com/Z3tt/TidyTuesday/blob/master/R/2020_26_CaribouLocations.Rmd
 ```
 
 Last but not least and much quicker, the ´{tmap}´package can help, but you need
