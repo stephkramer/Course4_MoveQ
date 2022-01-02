@@ -31,7 +31,6 @@ h2, h3, h4, h5, h6, legend {
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
-#knitr::opts_knit$set(root.dir = 'C:/Users/kramer/PopDynIZW Dropbox/Steph Kramer/_GitHub/Course4_MoveQ')
 ```
 
 # Introduction
@@ -74,13 +73,16 @@ Some of the packages listed in the next chapter are designed for these analyses.
 
 TODO plot pic (fox_Q_20190113_sks.jpg "fox q") funktioniert nicht
 
-[TODO - exchange Q with Caro's foxes, ref PhD C Scholz]
+[TODO - exchange Q with Caro's foxes for habitat selection, ref PhD C Scholz]
 
 In the following, we will step by step start with loading and exploring movement data
 of female red fox (*Vulpes vulpes*) 'Q von Stralau', who had a small home range 
 in Berlin, Germany. She was collared in January 2018 and had a very stable daily routine
-as shown by 4 (20) min relocation intervals. We will, however, only use the data of one month
-in this exercise, as data sets quickly get too big. Please note: the courses
+as shown by 4 (20) min relocation intervals. For any details on the data
+please refer to Kimmig (2021) and Scholz (2020).
+
+We will, however, only use the data of one month in this exercise, 
+as data sets quickly get too big. Please note: the courses
 [Course1_IntroR](https://github.com/stephkramer/Course1_IntroR) and [Course2_SpatialR](https://github.com/stephkramer/Course2_SpatialR) are 
 obligatory for this tutorial.
 
@@ -95,12 +97,12 @@ obligatory for this tutorial.
 
 * Joo, R, Boone, ME, Clay, TA, Patrick, SC, Clusella-Trullas, S, Basille, M. Navigating through the r packages for movement. J Anim Ecol. 2020; 89: 248– 267. https://doi.org/10.1111/1365-2656.13116
 
-* Kimmig, S (2021). xxx, PhD thesis, FU Berlin.
+* Kimmig, S (2021). The ecology of red foxes (*Vulpes vulpes*) in urban environments, PhD thesis, FU Berlin. https://refubium.fu-berlin.de/handle/fub188/32478
 
 *  Michelangeli, M., Payne, E., Spiegel, O., Sinn, D. L., Leu, S. T., Gardner, M. G., & Sih, A. (2021). Personality, spatiotemporal ecological variation and resident/explorer movement syndromes in the sleepy lizard. Journal of Animal Ecology, 00, 1– 14. https://doi.org/10.1111/1365-2656.13616
 
 * Scholz, C (2020). The ecology of red foxes (*Vulpes vulpes*) in anthropogenic
-environments. PhD thesis, FU Berlin.
+landscapes. PhD thesis, FU Berlin. https://refubium.fu-berlin.de/handle/fub188/29984
 
 * Zuur, A.F., Ieno, E.N. and Elphick, C.S. (2010), A protocol for data exploration to avoid common statistical problems. Methods in Ecology and Evolution, 1: 3-14. https://doi.org/10.1111/j.2041-210X.2009.00001.x
    
@@ -229,8 +231,8 @@ lf
 ```
 
 The output lists two results, [1] is another subfolder, and [2] a text file. If
-you already know that your movement data contain e.g. 'gps' in their names or
-are stored as '.txt' or '.csv' files, you can directly search for those files with the
+you already know that your movement data contains e.g. 'gps' in its name or
+is stored as '.txt' or '.csv' files, you can directly search for those files with the
 *pattern* argument:
 
 ```{r}
@@ -238,14 +240,14 @@ are stored as '.txt' or '.csv' files, you can directly search for those files wi
 list.files(path=here("data-raw"),pattern='gps',full.names=FALSE)
 ```
 
-Now load the data file. 
+Now load the data file. Our first fox filename should be 'tag5334_gps.txt'.
 ```{r}
 dat_anim <- read.table(file=lf[2], header=TRUE, fill=TRUE, sep=',')
 ```
 
 ### Data check
 
-Let's have a look at the data. This is the typical data stored on e-obs collars:
+Let's have a look at the data. This is the typical way data are stored on e-obs collars:
 ```{r}
 dat_anim[1:5,] # recap: head(dat_anim) also works
 ```
@@ -325,6 +327,19 @@ dat_anim_na$daytime   <- computeIsDayByLocation(dat_anim_na$start.timestamp,
 # head(dat_anim_na)
 ```
 
+Finally, we save the processed data file that we will use for exploration
+and analysis into the subfolder ...'output/data-proc'. There are two options
+
+```{r}
+# R data file - can only be opened/ read with R by using function load()
+save(dat_anim_na, file = here('output/data-proc/tag5334_gps_proc.RData'))
+
+# interchange file format .csv
+write.csv(dat_anim_na, file = here('output/data-proc/tag5334_gps_proc.csv'))
+```
+
+Check your output folder for these files. The efficient '.RData' file storage
+is about 4 times smaller than the '.csv' file. 
 
 ### Data transformation
 
@@ -349,6 +364,20 @@ coordinate reference system in meters:
 mydf_sf_trans <-  st_transform(mydf_sf, 5631 )  # EPSG-code Pulkovo 
 mydf_sp_trans <-  spTransform(mydf_sp, CRS("+init=epsg:5631"))
 ```
+
+# Exercise 4.1
+
+This is recap from Course2. Please plot the animal relocations in two different 
+colours for column 'daytime', using the *data.frame* and one of 
+the options with ´{ggplot2}´,´{ggpmap}´ or ´{leaflet}´. Use the
+processed file of fox Q (tag5334_gps_proc) and do it in a separate script. Save 
+your script as Course4_Exercise1_*yourname*.R  .
+<br><br>
+Hint: Remember to load the libraries.
+Note that you might want to plot the locations in the correct
+spatial dimensions by projecting it using the functions
+*st_as_sf()* and *st_transform()* .  
+
 
 # Data exploration
 
@@ -448,7 +477,8 @@ m_leaf # leaflet is bad for export -> create them in ggmap instead!
 ```
 
 Last but not least and much quicker, the ´{tmap}´package can help, but you need
-an sf/sp-object:
+an sf/sp-object. Recap for styling the plot:
+https://www.r-bloggers.com/2021/12/introduction-to-geospatial-visualization-with-the-tmap-package/
 
 ```{r}
 tmap_mode(mode = "view")
