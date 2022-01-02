@@ -1,0 +1,187 @@
+---
+title: "Course 4 - Exercise 1 - Solution"
+author: "Stephanie Kramer-Schadt"
+date: "`r Sys.setlocale('LC_TIME','C'); paste('Last Update', format(Sys.time(), '%B %e, %Y')) `" 
+        #"`r Sys.Date()`" # 
+output:
+  rmdformats::readthedown:
+    highlight: kate
+    code_folding: show
+    toc_depth: 4
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+params:
+  date: !r Sys.Date()
+---
+
+<style>
+h1 {
+  color: Orange ;
+}
+h2, h3, h4, h5, h6, legend {
+  color: Indigo ;
+}
+
+#sidebar h2 {
+  background-color: Indigo;
+}
+</style>
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+# Solution Exercise 4.1
+
+## Load the processed data file
+
+```{r libs, echo=TRUE}
+library(here); library(sf); library(ggplot2); library(ggmap); library(leaflet);
+library(tmap)
+```
+
+
+```{r}
+animal <- get(load(file = here('output/data-proc/tag5334_gps_proc.RData')))
+
+# transform into spatial simple feature sf object
+mydf_sf <- st_as_sf(x = data.frame(animal),
+                       coords = c("longitude", "latitude"),
+                       crs = 4326,
+                       sf_column_name = "geometry" )
+# and project
+mydf_sf_trans <-  st_transform(mydf_sf, 5631 )  # EPSG-code Pulkovo
+```
+
+## Plot the data
+
+A quick plot from the simple *data.frame*
+```{r}
+# latitude is y-Axis, longitude = x-axis in cartesian coordinate system
+plot(animal$latitude ~ animal$longitude,
+       pch='.',
+       col= as.numeric(animal$daytime)+1 # + 1 because color 0 is transparent
+     )
+```
+
+ A quick plot of the movement path, using only the first 50 rows
+```{r}
+plot(animal$latitude[1:50] ~ animal$longitude[1:50], type= 'l') 
+```
+
+
+Using ggplot:
+```{r}
+baseplot_df <- ggplot(data = animal) +
+              geom_point(aes(x=longitude,
+                             y=latitude,
+                             color = daytime),
+                         size=0.01, alpha=0.5)   +  
+              xlab("Longitude") + ylab("Latitude") +
+              ggtitle("Telemetry data") 
+baseplot_df
+```
+
+
+Much nicer with ggplot2 and the projected sf object with *geom_sf()*:
+```{r}
+baseplot_sf <- ggplot(data = mydf_sf_trans) +
+              geom_sf(aes(color = daytime),size=0.01, alpha=0.5)   +  
+              xlab("Longitude") + ylab("Latitude") +
+              ggtitle("Telemetry data")
+baseplot_sf
+```
+
+We can even add contour lines of the point density:
+<br>
+TODO - error here - duplicated aes - auch 1 missing point value???
+```{r}
+densplot <- baseplot_sf + stat_density_2d(
+                         aes(x = st_coordinates(mydf_sf_trans)[,1], 
+                             y = st_coordinates(mydf_sf_trans)[,2],
+                         alpha = ..level..,
+                         color = after_scale(colorspace::darken(color, .5, space = "HLS")),
+                         fill  = after_scale(colorspace::lighten(color, .4, space = "HLS"))), 
+                         geom  = "polygon",
+                         color = "white" ,
+                         size  = .02,
+                         n     = 500,
+                         bins  = 5,
+                         adjust = 3,
+                         data  = mydf_sf_trans)  
+densplot
+
+# example of how to save the plot to your file
+# ggsave(here("plots","plot_pointdensity.png"), dpi = 800, height = 6, width = 6)
+```
+
+We can also add background using ggmap. Check here for a quick start to ggmap:
+ https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf
+
+```{r}
+# define a bounding box for the plot
+b <- c(13.460,52.485,13.490,52.500) # make large enough to plot all data!
+
+my_tiles <- get_map(location = b, maptype = "terrain", source='osm', zoom = 15)
+
+(ggmap(my_tiles) 
+  + geom_point(aes(x = longitude, y = latitude), 
+               data = data.frame(animal), 
+               colour = as.numeric(animal$daytime)+6, 
+               size = 0.05)
+  + labs(x="Latitude", y="Longitude", title="telemetry locations") 
+)
+
+```
+
+
+A nicer interactive plot with leaflet. The first location of the track is marked:
+
+```{r}
+# get first location of track
+base_wgs84_x <- animal$longitude[1]
+base_wgs84_y <- animal$latitude[1]
+
+m_leaf <- leaflet(animal) %>% 
+  addTiles() %>%
+  addMarkers(lng=base_wgs84_x, lat=base_wgs84_y, 
+             popup="Start") %>%
+  addPopups(base_wgs84_x, base_wgs84_y, 'Starting point',
+            options = popupOptions(closeButton = TRUE))%>%
+  addCircles(lng = ~longitude, lat = ~latitude,~5,
+             stroke = T,
+             color= 'white',
+             weight=1,
+             fill=T, 
+             fillColor= 'blue',
+             fillOpacity = 0.3) 
+m_leaf # leaflet is bad for export -> create maps in ggmap instead!
+
+```
+Get more inspiration here:
+https://github.com/Z3tt/TidyTuesday/blob/master/R/2020_26_CaribouLocations.Rmd
+
+<br>
+
+
+For completion of the picture:
+TODO - ein bisschen aufhübschen?
+
+```{r}
+tmap_mode(mode = "plot")
+  tm_shape(shp = mydf_sf_trans)  + tm_dots(size = 0.01, 
+                                           col = 'daytime',  
+                                           alpha=0.5) 
+
+```
+
+
+# END
+
+```{r session-info}
+sessionInfo()
+```
+
