@@ -300,6 +300,7 @@ dat_anim_na$yearday <- yday(dat_anim_na$start.timestamp)
 dat_anim_na$month   <- month(dat_anim_na$start.timestamp)
 dat_anim_na$hour    <- hour(dat_anim_na$start.timestamp)
 dat_anim_na$kweek   <- week(dat_anim_na$start.timestamp)
+dat_anim_na$date    <- date(dat_anim_na$start.timestamp)
 # crosscheck with
 # head(dat_anim_na)
 ```
@@ -341,6 +342,78 @@ write.csv(dat_anim_na, file = here('output/data-proc/tag5334_gps_proc.csv'))
 Check your output folder for these files. The efficient '.RData' file storage
 is about 4 times smaller than the '.csv' file. 
 
+
+# Exercise 4.1
+
+This is recap from Course2. Please plot the animal relocations in two different 
+colours for column 'daytime', using the *data.frame* and one of 
+the options with ´{ggplot2}´,´{ggpmap}´ or ´{leaflet}´. Use the
+processed file of fox Q (tag5334_gps_proc) and do it in a separate script. Save 
+your script as Course4_Exercise1_*yourname*.R  .
+<br><br>
+Hint: Remember to load the libraries.
+Note that you might want to plot the locations in the correct
+spatial dimensions by projecting it using the functions
+*st_as_sf()* and *st_transform()* .  
+
+
+# Data exploration
+
+
+## Check for temporal outliers
+
+
+```{r}
+table(dat_anim_na$date)  #  there is a strange date - 2025-12-26
+
+# Delete data row
+delme <- which(dat_anim_na$date == '2025-12-26')
+dat_anim_na[delme,]
+dat_anim_na <- dat_anim_na[-delme,] # delete the strange date and 
+table(dat_anim_na$date)             # check again
+plot(table(dat_anim_na$date))       # plot the number of fixes per day
+```
+
+The number of fixes (locations taken) per day seems to be quite regular.
+
+```{r}
+plot(table(dat_anim_na$hour))       # plot the number of fixes per hour
+```
+
+More fixes during the night - this is the active phase. As these are circular 
+data, we can plot the number of fixes as sign for activity (knowing that our
+collars did not record when foxes were inactive). 
+
+### Plot activity
+```{r}
+# simple
+timetoplot <- circular(dat_anim_na$hour%%24, # convert to 24 hrs
+                       units="hours", template="clock24")
+rose.diag(timetoplot, bin=24, col="blue",
+          main="Events by Hour (sqrt scale)", prop=3)
+```
+
+Check whether the activity during the day was before sunrise:
+
+```{r}
+# with ggplot
+# code adapted from https://gist.github.com/mattbaggott/4361381
+ggplot(dat_anim_na,aes(x=hour,fill=daytime))+
+  geom_bar(breaks=seq(0,24),width = 2,colour="grey")+
+  coord_polar(start=0)+
+  theme_minimal()+
+  scale_fill_brewer()+
+  ylab("Count")+
+  ggtitle("Events by Time of day")+
+  scale_x_continuous("", limits=c(0,24),
+                     breaks=seq(0,24),
+                     labels=seq(0,24))
+```
+
+
+
+## Check for spatial outliers
+
 ### Data transformation
 
 Now we can transform the data into *sf* and *sp* objects and **assign** 
@@ -365,119 +438,7 @@ mydf_sf_trans <-  st_transform(mydf_sf, 5631 )  # EPSG-code Pulkovo
 mydf_sp_trans <-  spTransform(mydf_sp, CRS("+init=epsg:5631"))
 ```
 
-# Exercise 4.1
-
-This is recap from Course2. Please plot the animal relocations in two different 
-colours for column 'daytime', using the *data.frame* and one of 
-the options with ´{ggplot2}´,´{ggpmap}´ or ´{leaflet}´. Use the
-processed file of fox Q (tag5334_gps_proc) and do it in a separate script. Save 
-your script as Course4_Exercise1_*yourname*.R  .
-<br><br>
-Hint: Remember to load the libraries.
-Note that you might want to plot the locations in the correct
-spatial dimensions by projecting it using the functions
-*st_as_sf()* and *st_transform()* .  
-
-
-# Data exploration
-
-## Plot the data
-
-This is recap from Course2. A quick plot from the simple *data.frame*
-```{r}
-# latitude is y-Axis, longitude = x-axis in cartesian coordinate system
-plot(dat_anim_na$latitude ~ dat_anim_na$longitude,
-       pch='.',
-       col=as.numeric(dat_anim_na$daytime)+1 # + 1 because color 0 is transparent
-     )
-```
-
- A quick plot of the movement path, using only the first 50 rows
-```{r}
-plot(dat_anim_na$latitude[1:50] ~ dat_anim_na$longitude[1:50], type= 'l') 
-```
-
-Much nicer with ggplot and the projected sf object:
-```{r}
-baseplot <- ggplot(data = mydf_sf_trans) +
-              geom_sf(aes(color = daytime),size=0.01, alpha=0.5)   +  
-              xlab("Longitude") + ylab("Latitude") +
-              ggtitle("Telemetry data")
-baseplot
-```
-
-We can even add contour lines of the point density:
-TODO - error here - duplicated aes - auch 1 missing point value???
-```{r}
-densplot <- baseplot + stat_density_2d(
-                         aes(x = st_coordinates(mydf_sf_trans)[,1], 
-                             y = st_coordinates(mydf_sf_trans)[,2],
-                         alpha = ..level..,
-                         color = after_scale(colorspace::darken(color, .5, space = "HLS")),
-                         fill  = after_scale(colorspace::lighten(color, .4, space = "HLS"))), 
-                         geom  = "polygon",
-                         color = "white" ,
-                         size  = .02,
-                         n     = 500,
-                         bins  = 5,
-                         adjust = 3,
-                         data  = mydf_sf_trans)  
-densplot
-
-# example of how to save the plot to your file
-# ggsave(here("plots","plot_pointdensity.png"), dpi = 800, height = 6, width = 6)
-```
-
-We can also add background using ggmap. Check here for a quick start to ggmap:
- https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf
-
-```{r}
-# define abounding box for the plot
-b <- c(13.460,52.485,13.490,52.500) # make large enough to plot all data!
-
-t <- get_map(location = b, maptype = "terrain", source='osm', zoom = 15)
-
-(ggmap(t) 
-  + geom_point(aes(x = longitude, y = latitude), 
-               data = data.frame(dat_anim_na), 
-               colour = as.numeric(dat_anim_na$daytime)+5, 
-               size = 0.05)
-  + labs(x="Latitude", y="Longitude", title="telemetry locations") 
-)
-
-```
-
-
-A nicer interactive plot with leaflet
-
-```{r}
-
-base_wgs84_x <- dat_anim_na$longitude[1]
-base_wgs84_y <- dat_anim_na$latitude[1]
-
-m_leaf <- leaflet(dat_anim_na) %>% 
-  addTiles() %>%
-  addMarkers(lng=base_wgs84_x, lat=base_wgs84_y, 
-             popup="Start") %>%
-  addPopups(base_wgs84_x, base_wgs84_y, 'Starting point',
-            options = popupOptions(closeButton = TRUE))%>%
-  addCircles(lng = ~longitude, lat = ~latitude,~5,
-             stroke = T,
-             color= 'white',
-             weight=1,
-             fill=T, 
-             fillColor= 'blue',
-             fillOpacity = 0.3) 
-m_leaf # leaflet is bad for export -> create them in ggmap instead!
-
-# no background: leaflet(dat_anim_na) %>% addCircles(lng = ~longitude, lat = ~latitude)
-
-# get more inspiration here:
-# https://github.com/Z3tt/TidyTuesday/blob/master/R/2020_26_CaribouLocations.Rmd
-```
-
-Last but not least and much quicker, the ´{tmap}´package can help, but you need
-an sf/sp-object. Recap for styling the plot:
+Recap for styling the plot:
 https://www.r-bloggers.com/2021/12/introduction-to-geospatial-visualization-with-the-tmap-package/
 
 ```{r}
@@ -491,6 +452,11 @@ tmap_mode(mode = "view")
 Have a deep look at the data: did the fox really swim? (points in Lake Rummelsburg).
 Or are these outliers? No: the lake was frozen! Note: you really need to know your 
 animal and the area!
+<br>
+
+TODO - how to access date of the outlier and check temperature ?
+
+
 
 # END
 
