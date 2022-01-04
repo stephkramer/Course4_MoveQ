@@ -332,15 +332,15 @@ Finally, we save the processed data file that we will use for exploration
 and analysis into the subfolder ...'output/data-proc'. There are two options
 
 ```{r}
-# R data file - can only be opened/ read with R by using function load()
-save(dat_anim_na, file = here('output/data-proc/tag5334_gps_proc.RData'))
+# R data file - can only be opened/ read with R by using function readRDS()
+saveRDS(dat_anim_na, file = here('output/data-proc/tag5334_gps_proc.Rds'))
 
 # interchange file format .csv
 write.csv(dat_anim_na, file = here('output/data-proc/tag5334_gps_proc.csv'))
 ```
 
-Check your output folder for these files. The efficient '.RData' file storage
-is about 4 times smaller than the '.csv' file. 
+Check your output folder for these files. The efficient '.Rds' file storage
+is about 3 times smaller than the '.csv' file. 
 
 
 # Exercise 4.1
@@ -410,7 +410,7 @@ ggplot(dat_anim_na,aes(x=hour,fill=daytime))+
                      labels=seq(0,24))
 ```
 
-
+TODO heatmap /activity plot for weeks~hrs
 
 ## Check for spatial outliers
 
