@@ -509,11 +509,12 @@ mean(timeLag(my_fox, units="mins"))
 max(timeLag(my_fox, units="mins"))
 ```
 
-Turning angles and step length:
+Turning angles (makes only sense with high resolution data) and step length:
 ```{r}
 turnang <- angle(my_fox)
-#turnang <- turnAngleGc(my_fox) # the same
-rose.diag(turnang, bins=36,shrink=0.6,xlim=c(-2,2),ylim=c(-2,2),axes=T,prop=3,units='degrees')
+# turnang <- turnAngleGc(my_fox) # the same
+# using the absolute abs(), because -180 and 180 has similar meaning: the animal turns sharply
+hist(abs(turnang)) 
 
 steplength <- distance(my_fox) #know your units!
 hist(steplength)
