@@ -486,6 +486,11 @@ animal and the area before analysing data!
 ## Basic movement analyses
 ### Transform your data into a `{move}`object
 
+check here for the possibilities of what to do with the package: 
+<br>
+* https://cran.r-project.org/web/packages/move/vignettes/move.html
+* https://rdrr.io/cran/move/f/vignettes/move.Rmd
+
 ```{r}
 my_fox <- move(x=dat_anim_na$longitude, y= dat_anim_na$latitude,
                time=as.POSIXct(dat_anim_na$start.timestamp,format="%Y-%m-%d %H:%M:%S"),
@@ -494,19 +499,26 @@ head(my_fox); nrow(my_fox)
 
 ```
 
+### Extract basic movement metrics
 
+Time lags between the fixes:
 ```{r}
-
+timeLag(my_fox, unit = "mins")[1:5] # varies a lot, but minimum here 20 min
+min(timeLag(my_fox, units="mins"))
+mean(timeLag(my_fox, units="mins"))
+max(timeLag(my_fox, units="mins"))
 ```
 
+Turning angles and step length:
+```{r}
+turnang <- angle(my_fox)
+#turnang <- turnAngleGc(my_fox) # the same
+rose.diag(turnang, bins=36,shrink=0.6,xlim=c(-2,2),ylim=c(-2,2),axes=T,prop=3,units='degrees')
 
+steplength <- distance(my_fox) #know your units!
+hist(steplength)
 
-unique(timestamps(my_fox))
-timeLag(my_fox, unit = "mins") # varies a lot, but minimum here 20 min
-
-# a simple plot, red= day (resting), black = night (active period)
-plot(my_fox, col= as.numeric((my_fox$daytime)+1),pch = as.numeric((my_fox$daytime)+10) )
-
+```
 
 
 
