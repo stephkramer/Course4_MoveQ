@@ -484,11 +484,14 @@ tmap_mode(mode = "view")
 ```
 
 Have a deep look at the data: did the fox really swim? (points in Lake Rummelsburg).
-Or are these outliers? No: the lake was frozen! Note: you really need to know your 
-animal and the area!
+Or are these outliers? No: the lake was frozen - check the date! Note: you really need to know your 
+animal and the area before analysing data!
 <br>
 
-TODO - how to access date of the outlier and check temperature ?
+```{r,echo=FALSE, eval=FALSE}
+# TODO - how to access date of the outlier and check temperature ?
+```
+
 
 
 
