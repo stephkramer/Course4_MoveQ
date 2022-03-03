@@ -129,13 +129,12 @@ baseplot_sf <-
 
 baseplot_sf
 ```
+
+Get more inspiration here:
+https://github.com/Z3tt/TidyTuesday/blob/master/R/2020_26_CaribouLocations.Rmd
 <br>
 
-We can even add contour lines of the point density:
-<br>
-TODO - error here - duplicated aes - auch 1 missing point value??? 
-NOTE CED: Funktioniert bei mir... Allerdings sieht man halt die Konturlinien kaum da sie weiß sind. Was genau möchtest du hier machen?
-```{r}
+```{r, include = FALSE}
 densplot <- 
   baseplot_sf + 
   stat_density_2d(
@@ -143,35 +142,33 @@ densplot <-
         y = st_coordinates(mydf_sf_trans)[,2], 
         alpha = ..level..,
         color = daytime,
-        color = after_scale(colorspace::darken(color, .5, space = "HLS")),   ## was soll das machen? wird nicht angewandt , da selbst-referenziell (color = dunkle version von color = dunkle version von dunkler version von color etc); wenn es daytime sein soll, muss es nochmal explizit angesprochen werden
-        fill  = after_scale(colorspace::lighten(color, .4, space = "HLS"))), ## was soll das machen? 
-     geom  = "polygon",
-     #color = "white" , ## color wird überschrieben -> einmal in aes() definiert, einmal außerhalb -> daher weiß
-     size  = .02,
-     n     = 500,
-     bins  = 5,
-     adjust = 3)  
+        color = after_scale(colorspace::darken(color, .5, space = "HLS")),  
+        fill  = after_scale(colorspace::lighten(color, .4, space = "HLS"))),
+    geom  = "polygon",
+    size  = .02,
+    n = 500,
+    bins = 5,
+    adjust = 3)  
 
 densplot
 
 # example of how to save the plot to your file
 # ggsave(here("plots", "plot_pointdensity.png"), dpi = 800, height = 6, width = 6)
 ```
-<br>
 
-We can also add background using ggmap. Check here for a quick start to ggmap:
+We can also add a background using the `{ggmap}` package. Check here for a quick start to `{ggmap}`:
 https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf
 
 ```{r}
-# define a bounding box for the plot
-b <- c(13.460,52.485,13.490,52.500) # make large enough to plot all data!
+## define a bounding box for the plot
+b <- c(13.460, 52.485, 13.490, 52.500) ## make large enough to plot all data!
 
 my_tiles <- get_map(location = b, maptype = "terrain", source = "osm", zoom = 15)
 
 ggmap(my_tiles) + 
   geom_point(aes(x = longitude, y = latitude), 
              data = data.frame(animal), 
-             colour = as.numeric(animal$daytime)+6, 
+             colour = as.numeric(animal$daytime) + 6, 
              size = 0.05) + 
   labs(x = "Latitude", y = "Longitude", title = "Telemetry locations")
 ```
@@ -186,23 +183,20 @@ base_wgs84_y <- animal$latitude[1]
 
 m_leaf <- leaflet(animal) %>% 
   addTiles() %>%
-  addMarkers(lng=base_wgs84_x, lat=base_wgs84_y, 
-             popup="Start") %>%
-  addPopups(base_wgs84_x, base_wgs84_y, 'Starting point',
-            options = popupOptions(closeButton = TRUE))%>%
-  addCircles(lng = ~longitude, lat = ~latitude,~5,
-             stroke = T,
-             color= 'white',
-             weight=1,
-             fill=T, 
-             fillColor= 'blue',
+  addMarkers(lng = base_wgs84_x, lat = base_wgs84_y, 
+             popup = "Start") %>%
+  addPopups(base_wgs84_x, base_wgs84_y, "Starting point",
+            options = popupOptions(closeButton = TRUE)) %>%
+  addCircles(lng = ~longitude, lat = ~latitude, ~5,
+             stroke = TRUE,
+             color = "white",
+             weight = 1,
+             fill = TRUE, 
+             fillColor = "blue",
              fillOpacity = 0.3) 
 
-m_leaf # leaflet is bad for export -> create maps in ggmap instead!
+m_leaf ## leaflet is bad for export -> create maps in ggmap instead!
 ```
-
-Get more inspiration here:
-https://github.com/Z3tt/TidyTuesday/blob/master/R/2020_26_CaribouLocations.Rmd
 
 <br>
 
