@@ -142,7 +142,7 @@ functions we need.
 pkgs = c("here", "sp", "sf", "dismo", "raster", "GISTools",  "rgdal", 
          "maptools", "rgeos","rgl","rasterVis", "adehabitatHR", "move", "tmap",
          "plotly", "circular","gganimate","moveVis", "ggmap", "maps", "mapproj",
-         "viridis","dplyr", "devtools","lubridate", "patchwork",
+         "viridis","dplyr", "devtools","lubridate", "patchwork","gower",
          "colorspace","ragg", "ggtext","pdftools", "units", "leaflet",
          "glue", "cowplot", "tidyverse", "ggplot2", "Cairo") 
 
@@ -156,9 +156,9 @@ first check which ones are already installed, and save the ones *not installed* 
 an object called <my_packages> and only install the missing ones:
 
 ```{r}
-# my_packages <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
-# my_packages
-# if(length(my_packages) > 0) install.packages(my_packages)
+my_packages <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
+my_packages
+if(length(my_packages) > 0) install.packages(my_packages)
 ```
 
 Now load the packages:
@@ -203,6 +203,7 @@ library(units)
 library(ggplot2)
 library(patchwork) # to combine plots
 library(leaflet)
+library(gower)
 ```
 
 ## Set the working environment
@@ -380,16 +381,7 @@ spatial dimensions by projecting it using the functions
 
 ## Check for temporal outliers
 
-First, we have a quick look at the location data to get an impression:
-
-```{r}
-tmap_mode(mode = "plot")
-  tm_shape(shp = mydf_sf_trans)  + tm_dots(size = 0.01, 
-                                           col = 'daytime',  
-                                           alpha=0.5) 
-```
-
-Then, we check the dates:
+First, we check the dates:
 
 ```{r}
 table(dat_anim_na$date)  #  there is a strange date - 2025-12-26
@@ -479,8 +471,7 @@ https://www.r-bloggers.com/2021/12/introduction-to-geospatial-visualization-with
 tmap_mode(mode = "view")
   tm_shape(shp = mydf_sf_trans)  + tm_dots(size = 0.01, 
                                            col = 'daytime',  
-                                           alpha=0.5) 
-
+                                           alpha=0.5)
 ```
 
 Have a deep look at the data: did the fox really swim? (points in Lake Rummelsburg).
@@ -491,6 +482,30 @@ animal and the area before analysing data!
 ```{r,echo=FALSE, eval=FALSE}
 # TODO - how to access date of the outlier and check temperature ?
 ```
+
+## Basic movement analyses
+### Transform your data into a `{move}`object
+
+```{r}
+my_fox <- move(x=dat_anim_na$longitude, y= dat_anim_na$latitude,
+               time=as.POSIXct(dat_anim_na$start.timestamp,format="%Y-%m-%d %H:%M:%S"),
+               proj= CRS("+proj=longlat"),data=dat_anim_na,animal="FoxQvonStralau"  )  
+head(my_fox); nrow(my_fox)
+
+```
+
+
+```{r}
+
+```
+
+
+
+unique(timestamps(my_fox))
+timeLag(my_fox, unit = "mins") # varies a lot, but minimum here 20 min
+
+# a simple plot, red= day (resting), black = night (active period)
+plot(my_fox, col= as.numeric((my_fox$daytime)+1),pch = as.numeric((my_fox$daytime)+10) )
 
 
 
