@@ -254,6 +254,10 @@ Now load the data file. Our first fox filename should be 'tag5334_gps.txt'.
 
 lf_number <- which(lf == thefullfile)
 dat_anim <- read.table(file=lf[lf_number], header=TRUE, fill=TRUE, sep=',')
+
+# or, since with 'thefullfile' you gave the complete path, you can also directly load it
+#dat_anim <- read.table(file=thefullfile, header=TRUE, fill=TRUE, sep=',')
+
 ```
 
 ### Data check
@@ -300,8 +304,12 @@ We will now add some additional columns, where separate days (numbered from 1 to
 done with the package ´{lubridate}´. Check the [vignette](https://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html)!
 
 ```{r}
+# have a look at the timestamp format, here the first row of the column star.timestamp
+dat_anim_na$start.timestamp[1]
+
 # define date-time format - the format is year-month-day_hour:min:sec:
-dat_anim_na$start.timestamp <- ymd_hms(dat_anim_na$start.timestamp, tz="Europe/Berlin")  
+dat_anim_na$start.timestamp <- ymd_hms(dat_anim_na$start.timestamp, tz="Europe/Berlin") 
+dat_anim_na$start.timestamp[1]
 ```
 
 Now append the information:
@@ -316,7 +324,7 @@ dat_anim_na$date    <- date(dat_anim_na$start.timestamp)
 # head(dat_anim_na)
 ```
 
-In addition, we want to calulate the hours of sunset and sunrise as well as daylength.
+In addition, we want to calculate the hours of sunset and sunrise as well as daylength.
 For this, we need to install a package that is still under development, i.e.
 which is not on CRAN. We therefore must download and install it locally:
 
@@ -370,10 +378,9 @@ spatial dimensions by projecting it using the functions
 
 # Data exploration
 
-
 ## Check for temporal outliers
 
-First, we have a quick look at the data:
+First, we have a quick look at the location data to get an impression:
 
 ```{r}
 tmap_mode(mode = "plot")
@@ -382,7 +389,7 @@ tmap_mode(mode = "plot")
                                            alpha=0.5) 
 ```
 
-
+Then, we check the dates:
 
 ```{r}
 table(dat_anim_na$date)  #  there is a strange date - 2025-12-26
@@ -403,7 +410,8 @@ plot(table(dat_anim_na$hour))       # plot the number of fixes per hour
 
 More fixes during the night - this is the active phase. As these are circular 
 data, we can plot the number of fixes as sign for activity (knowing that our
-collars did not record when foxes were inactive). 
+collars did not record when foxes were inactive! Otherwise, we cannot distinguish
+missing data from inactive times! -> bias). 
 
 ### Plot activity
 ```{r}
@@ -431,7 +439,12 @@ ggplot(dat_anim_na,aes(x=hour,fill=daytime))+
                      labels=seq(0,24))
 ```
 
-TODO heatmap /activity plot for weeks~hrs
+
+```{r,echo=FALSE, eval=FALSE}
+# TODO heatmap /activity plot for weeks~hrs
+```
+
+
 
 ## Check for spatial outliers
 

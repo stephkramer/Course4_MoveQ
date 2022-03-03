@@ -192,6 +192,7 @@ tmap_mode(mode = "plot")
 
 # END
 
+TODO - close/ fold output of session info
 ```{r session-info}
 sessionInfo()
 ```
