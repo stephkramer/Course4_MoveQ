@@ -56,11 +56,8 @@ library(tmap)
 
 
 ```{r, echo=-2}
-#animal <- readRDS(file = here('output/data-proc/tag5334_gps_proc.Rds')) 
-animal <- read.table(file = "https://github.com/stephkramer/Course4_MoveQ/blob/main/output/data-proc/tag5334_gps_proc.csv")
-wb_path <- “https://raw.githubusercontent.com/stephkramer/Course1_IntroR/master/data/data_wb_melden_en.csv” 
-df_recs <- read.table(file = pt_file, header = TRUE, sep = ',')
-class(x = df_recs)
+ animal <- readRDS(file = here('output/data-proc/tag5334_gps_proc.Rds')) 
+# animal <- readRDS(file = 'C:/Users/kramer/PopDynIZW Dropbox/Steph #Kramer/_GitHub/Course4_MoveQ/output/data-proc/tag5334_gps_proc.Rds')
 
 # transform into spatial simple feature sf object
 mydf_sf <- st_as_sf(x = data.frame(animal),

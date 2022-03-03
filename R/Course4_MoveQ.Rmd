@@ -230,7 +230,8 @@ lf <- list.files(path=here("data-raw"), full.names=TRUE)
 lf
 ```
 
-The output lists two results, [1] is another subfolder, and [2] a text file. If
+The output lists two results, there is another subfolder, and many files. E.g.,
+the element 7 of the vector lf, lf[7], is a folder. If
 you already know that your movement data contains e.g. 'gps' in its name or
 is stored as '.txt' or '.csv' files, you can directly search for those files with the
 *pattern* argument:
