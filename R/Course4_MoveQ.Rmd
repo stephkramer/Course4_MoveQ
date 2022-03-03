@@ -236,13 +236,23 @@ is stored as '.txt' or '.csv' files, you can directly search for those files wit
 *pattern* argument:
 
 ```{r}
-# check the difference, and note: full.names was set to FALSE
-list.files(path=here("data-raw"),pattern='gps',full.names=FALSE)
+# check the difference, and note: full.names is set to FALSE
+thefile <- list.files(path=here("data-raw"),pattern='gps',full.names=FALSE)
+thefile
+
+# ...and here to TRUE
+thefullfile <- list.files(path=here("data-raw"),pattern='gps',full.names=TRUE)
+thefullfile
 ```
 
 Now load the data file. Our first fox filename should be 'tag5334_gps.txt'.
 ```{r}
-dat_anim <- read.table(file=lf[2], header=TRUE, fill=TRUE, sep=',')
+# let's get the number of the list in lf that corresponds with the filename.
+# Tip of the day: always code everything you can, do not insert numbers or filenames
+# by hand, i.e. lf[2]. If you for example add new data, the numbering changes!
+
+lf_number <- which(lf == thefullfile)
+dat_anim <- read.table(file=lf[lf_number], header=TRUE, fill=TRUE, sep=',')
 ```
 
 ### Data check
@@ -361,6 +371,16 @@ spatial dimensions by projecting it using the functions
 
 
 ## Check for temporal outliers
+
+First, we have a quick look at the data:
+
+```{r}
+tmap_mode(mode = "plot")
+  tm_shape(shp = mydf_sf_trans)  + tm_dots(size = 0.01, 
+                                           col = 'daytime',  
+                                           alpha=0.5) 
+```
+
 
 
 ```{r}
