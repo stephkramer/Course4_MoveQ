@@ -521,6 +521,205 @@ hist(steplength)
 
 ```
 
+# TODO
+
+
+###divide into months and do HR by months
+
+```{r}
+### MCP
+cp <- mcp(anim_sp[,2], percent=95) # Minimum Convex Polygon (95%) per TierID # set unout for units!
+plot(cp)
+plot(anim_sp, add=TRUE, col= 'red')
+cp # angular units because based on lat/ long -> does not make sense! Reproject data!
+
+# project coordinate system in metres to calculate HR size
+anim_sp_5243 <-  spTransform(anim_sp, CRS("+init=epsg:5243"))
+anim_sf_5243 <-  st_transform(anim_sf, 5243)
+cp2 <- mcp(anim_sp_5243[,2], percent=95) # Minimum Convex Polygon (95%) per TierID # set unout for units!
+plot(cp2)
+plot(anim_sp_5243, add=TRUE, col= 'red')
+cp2
+gArea(cp2)/1e6  # now in square-km
+hrs <- mcp.area(anim_sp_5243[,2], percent=seq(50, 100, by = 5),unout='km2')
+hrs # home range size in km2 for the different MCP-levels
+writeOGR(cp, dsn=FileDir, "My_MCP95",'ESRI Shapefile',overwrite=T) #save as ESRI shapefile
+
+
+### Kernel utility density
+kud <- kernelUD(anim_sp_5243[,2], h="href")         # calculate kernel with h="href", animal identifier is second column
+#kud$'1'@h                                          # Parameter 'h' for ID = 1
+kernel.area(kud,unout='km2')
+homerange2 <- getverticeshr(kud,percent = 90)
+gArea(homerange2,byid=T)/1e6                        # same size?
+
+image(kud[[1]])
+title("Output of kernelUD")
+xyz <- as.image.SpatialGridDataFrame(kud[[1]])
+contour(xyz, add=TRUE)
+
+vud <- getvolumeUD(kud)
+image(vud[[1]])
+title("Output of getvolumeUD")
+xyzv <- as.image.SpatialGridDataFrame(vud[[1]])
+contour(xyzv, add=TRUE)
+points(anim_sp_5243, cex= 0.01, col='blue')
+#  writeOGR(kud1[[1]], dsn=FileDir, "kernel_hr1",'ESRI Shapefile',overwrite=T)
+#  writeOGR(vud[[1]], dsn=FileDir, "kernel_hr2",'ESRI Shapefile',overwrite=T)
+
+
+
+##### der krass coole 3D plot
+#install.packages("devtools")
+#devtools::install_github("ropensci/plotly")
+#library(plotly)
+
+xy <- coordinates(kud[[1]])
+z <- kud[[1]]@data$ud
+df_kud <- data.frame(x=xy[,1],y=xy[,2],z=z)
+#persp(x=df_kud$x, y=df_kud$y, z= df_kud$z)
+#plot3d(x=xy[,1],y=xy[,2],z=z)
+
+kud[[1]]@grid@cells.dim
+r <- raster(ncols=60,nrows=58)
+coordinates(df_kud) <- ~x + y
+r_kud <- rasterize(df_kud,r,'z',fun=max)
+
+myz <- matrix(z ,nrow= kud[[1]]@grid@cells.dim[[2]],
+              ncol= kud[[1]]@grid@cells.dim[[1]],byrow=F)
+# image(myz)
+kd.list <- list(x=xy[,1],y=xy[,2],z=myz)
+# with(kd.list, plot_ly(x = x, y = y, z = z, type = "surface"))
+plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rotation' in plot upper right
+
+#########  ende krass cooler plot ########
+
+
+
+
+#############################################################################
+######## advanced home range analyses - variogram and  aKDE  ################
+#############################################################################
+
+library(ctmm)
+# please read the vignettes of ctmm package to understand what is done in the following
+# https://cran.r-project.org/web/packages/ctmm/vignettes/variogram.html
+# https://cran.r-project.org/web/packages/ctmm/vignettes/akde.html
+
+animal$individual.local.identifier <- animal$tag.serial.number
+animal$timestamp <- animal$timestamp.of.fix
+animal$location.long <- animal$longitude
+animal$location.lat <- animal$latitude
+
+
+#ctmm_anim <- as.telemetry(animal)
+ctmm_anim <- as.telemetry(animal[1:1000,]) #I am restricting the data to the first points for saving computation time
+plot(ctmm_anim) #how strange! try:
+help(plot.telemetry)
+ctmm::plot(ctmm_anim, pch=17,lwd=0.1,cex=0.00001,xlim= c(-2000,2000)) #something does not work here....
+
+# please do the following steps for fitting the best model (movement process) to your data
+# https://cran.r-project.org/web/packages/ctmm/vignettes/variogram.html
+
+SVF <- variogram(ctmm_anim)
+plot(SVF,fraction=0.008) #Achtung, hectares !
+title("zoomed in")
+# this info gives first parameters for sigma, tau etc for fitting m.ouf (see below)
+# restricted space use (plateau),
+# autocorrelated positions ()
+# and autocorrelated velocities (upward curvature)
+
+plot(SVF,fraction=0.55,level=c(0.5,0.95))
+#plot(SVF,fraction=1,level=c(0.5,0.95))
+title("zoomed out")
+
+
+m.ouf <- ctmm(sigma=6 %#% "hectares",tau=c(0.04 %#% "day",0.2 %#% "hour"))
+plot(SVF,CTMM=m.ouf,level=level,col.CTMM="blue",fraction=0.02) #does the blue line fit?
+title("Ornstein-Uhlenbeck-F movement")
+
+### please read the variogram-vignette for 'Irregular Sampling Schedules'
+# if your data was not sampled in regular intervals
+# 20, 40 min sampling intervals
+level <- c(0.5,0.95) # 50% and 95% CIs
+dt <- c(20,40) %#% "min"
+SVF3 <- variogram(ctmm_anim,dt=dt)
+plot(SVF3,fraction=0.55,level=level)
+title("Multi method")
+
+# students ignore this!
+#scale_length_ov_vector <- round(length(SVF3@.Data[[1]])*0.8,digits=0) - 1000
+#plot(SVF3@.Data[[1]][25:scale_length_ov_vector],type='l') #for fitting colour of noise
+#forcolor <- SVF3@.Data[[1]]
+#write.csv(forcolor, 'Q_forCol.csv')
+
+
+### Maximum likelihood fitting
+### for a first 'guessimate' of model parameters
+## not run! - takes a long time for many data points
+#GUESS <- ctmm.guess(ctmm_anim,interactive=FALSE)
+#FIT <- ctmm.fit(ctmm_anim,GUESS)
+#summary(FIT)
+
+
+########################   aKDE fit ####################
+# https://cran.r-project.org/web/packages/ctmm/vignettes/akde.html
+
+M.IID <- ctmm.fit(ctmm_anim) # no autocorrelation timescales - yields KUD
+summary(M.IID)
+
+M.OUF <- ctmm.fit(ctmm_anim,m.ouf) # m.ouf quickly fitted by hand - see above
+summary(M.OUF)
+
+m.ouf <- ctmm.guess(ctmm_anim,interactive=FALSE) # automated model guess
+M.OUF <- ctmm.fit(ctmm_anim,m.ouf)
+summary(M.OUF)
+
+UD0 <- akde(ctmm_anim,M.IID)
+UD2 <- akde(ctmm_anim,M.OUF)
+UD2w <- akde(ctmm_anim,M.OUF,weights=TRUE) # for irregular sampling intervals
+summary(UD0);summary(UD2);summary(UD2w)
+
+# calculate one extent for all UDs
+EXT <- extent(list(UD0,UD2,UD2w),level=0.95)
+EXT
+
+par(mfrow=c(2,2))
+plot(ctmm_anim,UD=UD0,xlim=EXT$x,ylim=EXT$y)
+title(expression("IID KDE"["C"]))
+plot(ctmm_anim,UD=UD2,xlim=EXT$x,ylim=EXT$y)
+title(expression("OUF AKDE"["C"]))
+plot(ctmm_anim,UD=UD2w,xlim=EXT$x,ylim=EXT$y)
+title(expression("weighted OUF AKDE"["C"]))
+
+
+
+############################################################################################
+library(amt)
+#continue with SSFs for selection analysis
+#https://cran.r-project.org/web/packages/amt/vignettes/p4_SSF.html
+
+############################################################################################
+########## animate movement path with moveVis - take care, takes a lot of computation time !
+############################################################################################
+
+### not run!
+### aprox 30 min for 300 frames (in my computer)
+# http://movevis.org/index.html#get-started
+#move_data <- align_move(my_fox, res = 20, unit = "mins")
+#frames <- frames_spatial(move_data[1:100,], # restricted to only 100 data points!
+#                         path_colours = c("blue"),
+#                         map_service = "osm",
+#                         map_type = "topographic",
+#                         alpha = 0.5)
+## alternative with satellite data as background
+##frames <- frames_spatial(move_data[1:100,], map_service = "mapbox", map_type = "satellite",
+##                         map_token = "YOUR_MAPBOX_TOKEN")
+#length(frames)
+#animate_frames(frames, out_file = "example_1.gif",overwrite=TRUE)
+
+```
+
 
 
 # END
