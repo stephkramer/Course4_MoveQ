@@ -163,6 +163,17 @@ if(length(my_packages) > 0) install.packages(my_packages)
 
 Now load the packages:
 
+```{r, results='hide',echo=FALSE}
+
+# TODO - check if all libraries are needed. However, I guess the problem with 
+# course2-distance analysis was that a library was missing for them, and we
+# did not realize this because we have so many installed anyway
+
+```
+
+
+
+
 ```{r libraries, warning=FALSE, message=FALSE}
 library(here) #for easy directory management
 library(sp)
@@ -420,9 +431,9 @@ spatial dimensions by projecting it using the functions
 
 ## Load the cleaned data file
 
-I recommend that you store the cleaned file and continue with
-the processed file after major data manipulations have been conducted to minimize
-errors.
+I recommend that you store the raw file safely and continue with
+the cleaned and processed file after major data manipulations have been 
+conducted to minimize errors.
 
 ```{r}
 anim_proc <- readRDS(file = here('output/data-proc/tag5334_gps_proc.Rds'))
@@ -432,9 +443,13 @@ anim_proc <- readRDS(file = here('output/data-proc/tag5334_gps_proc.Rds'))
 Have a look whether there are gaps/ missing days in the data, or whether we have
 approximately a regular number of fixes each day.
 
+
 ```{r}
 plot(table(anim_proc$date))
-plot(table(anim_proc$yearday)) # what is the difference
+```
+
+```{r}
+plot(table(anim_proc$yearday)) # what is the difference?
 ```
 The number of fixes (locations taken) per day seems to be quite regular. Mind the 
 difference when plotting per date (sorted) and yearday (1-365).
@@ -454,14 +469,15 @@ collars did not record when foxes were inactive! Otherwise, we cannot distinguis
 missing data from inactive times! -> bias). 
 
 ```{r}
-# simple
+# simple circular plot (rose diagram)
 timetoplot <- circular(anim_proc$hour%%24, # convert to 24 hrs = bins
                        units="hours", template="clock24")
 rose.diag(timetoplot, bin=24, col="blue",
           main="Events by Hour (sqrt scale)", prop=3)
 ```
 
-Check whether the activity during the day was before sunrise:
+Check whether the activity during the day was before sunrise (our 'daytime' 
+column which is either TRUE (=yes, daylight) or FALSE (dark hours):
 
 ```{r}
 # with ggplot
@@ -482,7 +498,8 @@ Apart from the outliers between 11 and 13 o'clock, the active phase was
 during the dark hours.
 
 ```{r,echo=FALSE, eval=FALSE}
-# TODO heatmap /activity plot for weeks~hrs (makes only sense for 
+# TODO but not urgent 
+# heatmap /activity plot for weeks~hrs (makes only sense for 
 # yearly data)
 ```
 
