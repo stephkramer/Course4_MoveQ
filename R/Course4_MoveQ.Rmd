@@ -71,7 +71,7 @@ habitat preference, behavioral analyses (e.g. Hertel et al. 2021) and
 detection of movement syndromes (personality differences) (Michelangeli et al. 2021).
 Some of the packages listed in the next chapter are designed for these analyses. 
 
-```{r,eval=FALSE,echo==FALSE}
+```{r,eval=FALSE,echo=FALSE,results='hide'}
 
 [TODO - exchange Q with Caro's foxes for habitat selection, ref PhD C Scholz]
 
@@ -626,8 +626,10 @@ See lecture!
 
 
 ### Minimum Convex Polygon
+
 Unfortunately, we have to use *SpatialDataFrame*-Objects for activity range 
 calclulation, as the package '{adehabitatHR}' is based on the old '{sp}'-formaat.
+
 ```{r, echo=FALSE, results='hide', eval=FALSE}
 # TODO - something is wrong here with the units!!!! check the crs warning online
 hrBootstrap(my_fox,rep=5, level=99, unout="m2", plot=TRUE) #it is ha, not m2
@@ -693,12 +695,16 @@ writeOGR(kud90, dsn=here('output','data-proc'),
 
 # make the crosscheck: load and plot
 kernel_ud90_sf <- st_read(dsn=here('output','data-proc'),layer="kernel_ud90")
+# note: the CRS is not defined! So assign it:
+st_crs(kernel_ud90_sf) <- 3035
+
 plot(kernel_ud90_sf[,'id'])
+points(mydf_sp_trans[,1], cex= 0.01, col='red') # TODO - wiesooooooo???????
 ```
 
 
 Do the following only on a fast computer:
-```{r}
+```{r,echo=FALSE}
 ##### der krass coole 3D plot
 
 #install.packages("devtools")
