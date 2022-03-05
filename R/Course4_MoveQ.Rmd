@@ -571,7 +571,7 @@ mydf_sf_trans$coords <- st_coordinates(mydf_sf_trans)
 tt <- st_drop_geometry(mydf_sf_trans)
 
 my_fox <- move(x = tt$coords.X, y = tt$coords.Y,
-               time=as.POSIXct(tt$timestamp.of.fix,format="%Y-%m-%d %H:%M:%S"),
+               time=as.POSIXct(tt$start.timestamp,format="%Y-%m-%d %H:%M:%S"),
                proj= CRS("+init=epsg:3035"),
                data=tt,
                animal="FoxQvonStralau")  
@@ -611,7 +611,7 @@ hist(abs(turnang))
 ```{r}
 steplength <- distance(my_fox) # know your units!
 hist(steplength)
-max(steplength) # ~ 1 km in 20 min = 3 km / h
+max(steplength) # max 1 km in 20 min = 3 km / h
 
 hist(speed(my_fox)) # units? -> check ?speed
 ```
@@ -660,68 +660,66 @@ writeOGR(mcp_daytime, dsn=here('output','data-proc'),
 
 ### Kernel utility density
 
+Calculate the density kernel.
 ```{r}
 kud <- kernelUD(mydf_sp_trans[,'daytime'], h="href") # calculate kernel with h="href"
-# the output is an object with lists, accessed via str(kud)
-kernel.area(kud,unout='km2') # across all levels 5-95%
-homerange2 <- getverticeshr(kud,percent = 90) #this creates the spatial object
-gArea(homerange2,byid=T)/1e6                        # same size?
+# the output is an object with lists, accessed via: str(kud)
+kernel.area(kud, unout='km2') # across all levels 5-95%
 
+kud90 <- getverticeshr(kud,percent = 90) # this creates the spatial object, units m2 
+gArea(kud90,byid=T)/1e6                  # units km2
+```
+
+Make a plot and save it as spatial polygon. 
+```{r}
+# plot only the nighttime
+image(kud[[1]], col= viridis(100, direction = -1))
+xyz <- as.image.SpatialGridDataFrame(kud[[1]])
+contour(xyz, add=TRUE)
+points(mydf_sp_trans, cex= 0.01, col='red')
+
+# save it as shapefile - mind - here we can only save one contour line, 
+# in this case the 90% kernel:
+writeOGR(kud90, dsn=here('output','data-proc'), 
+         layer="kernel_ud90",'ESRI Shapefile',overwrite=T)
+
+# make the crosscheck: load and plot
+kernel_ud90_sf <- st_read(dsn=here('output','data-proc'),layer="kernel_ud90")
+plot(kernel_ud90_sf$id)
 ```
 
 
-
-
+Do the following only on a fast computer:
 ```{r}
-
-image(kud[[1]], col= terrain(100))
-image(kud[[2]])
-title("Output of kernelUD")
-xyz <- as.image.SpatialGridDataFrame(kud[[1]])
-contour(xyz, add=TRUE)
-xyz <- as.image.SpatialGridDataFrame(kud[[2]])
-contour(xyz, add=TRUE)
-
-vud <- getvolumeUD(kud)
-image(vud[[1]])
-title("Output of getvolumeUD")
-xyzv <- as.image.SpatialGridDataFrame(vud[[1]])
-contour(xyzv, add=TRUE)
-points(mydf_sp_trans, cex= 0.01, col='blue')
-#  writeOGR(kud1[[1]], dsn=FileDir, "kernel_hr1",'ESRI Shapefile',overwrite=T)
-#  writeOGR(vud[[1]], dsn=FileDir, "kernel_hr2",'ESRI Shapefile',overwrite=T)
-
-
-
 ##### der krass coole 3D plot
 
 #install.packages("devtools")
 #devtools::install_github("ropensci/plotly")
 #library(plotly)
+my_kud <- kud[[1]] # or choose kud[[2]]
 
-xy <- coordinates(kud[[1]])
-z <- kud[[1]]@data$ud
+xy <- coordinates(my_kud)
+z <- my_kud@data$ud
 df_kud <- data.frame(x=xy[,1],y=xy[,2],z=z)
 #persp(x=df_kud$x, y=df_kud$y, z= df_kud$z)
 #plot3d(x=xy[,1],y=xy[,2],z=z)
 
-kud[[1]]@grid@cells.dim
+my_kud@grid@cells.dim
 r <- raster(ncols=60,nrows=58)
 coordinates(df_kud) <- ~x + y
 r_kud <- rasterize(df_kud,r,'z',fun=max)
 
-myz <- matrix(z ,nrow= kud[[1]]@grid@cells.dim[[2]],
-              ncol= kud[[1]]@grid@cells.dim[[1]],byrow=F)
+myz <- matrix(z ,nrow= my_kud@grid@cells.dim[[2]],
+              ncol= my_kud@grid@cells.dim[[1]],byrow=F)
 # image(myz)
 kd.list <- list(x=xy[,1],y=xy[,2],z=myz)
 # with(kd.list, plot_ly(x = x, y = y, z = z, type = "surface"))
 plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rotation' in plot upper right
-
 #########  ende krass cooler plot ########
+```
 
 
-
-
+```{r}
 #############################################################################
 ######## advanced home range analyses - variogram and  aKDE  ################
 #############################################################################
@@ -730,14 +728,20 @@ library(ctmm)
 # please read the vignettes of ctmm package to understand what is done in the following
 # https://cran.r-project.org/web/packages/ctmm/vignettes/variogram.html
 # https://cran.r-project.org/web/packages/ctmm/vignettes/akde.html
+```
 
-animal$individual.local.identifier <- animal$tag.serial.number
-animal$timestamp <- animal$timestamp.of.fix
-animal$location.long <- animal$longitude
-animal$location.lat <- animal$latitude
+This package needs a 'telemetry' object, which can either be created from a 
+'data.frame' or can use our move-Object fom above.
+```{r}
+# anim_proc$individual.local.identifier <- anim_proc$tag.serial.number
+# anim_proc$timestamp                   <- anim_proc$timestamp.of.fix
+# anim_proc$location.long               <- anim_proc$longitude
+# anim_proc$location.lat                <- anim_proc$latitude
+# ctmm_anim <- as.telemetry(anim_proc)
+
+ctmm_fox <- as.telemetry(move_fox)
 
 
-#ctmm_anim <- as.telemetry(animal)
 ctmm_anim <- as.telemetry(animal[1:1000,]) #I am restricting the data to the first points for saving computation time
 plot(ctmm_anim) #how strange! try:
 help(plot.telemetry)
