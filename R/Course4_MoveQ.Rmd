@@ -181,7 +181,7 @@ library(dismo)
 library(raster)
 library(GISTools)
 library(rgdal)    # retiring end of 2023 -> use stars/ terra /sf
-library(maptools) # retiring end of 2023 -> use sp
+library(maptools) # retiring end of 2023 -> use sf
 library(rgeos)    # retiring end of 2023 -> use sf
 library(rgl)
 library(rasterVis)
@@ -433,7 +433,8 @@ spatial dimensions by projecting it using the functions
 
 I recommend that you store the raw file safely and continue with
 the cleaned and processed file after major data manipulations have been 
-conducted to minimize errors.
+conducted to minimize errors. I'd even suggest to make these steps
+in different R-scripts.
 
 ```{r}
 anim_proc <- readRDS(file = here('output/data-proc/tag5334_gps_proc.Rds'))
@@ -524,9 +525,15 @@ coordinate reference system in meters:
 ```{r}
 # transform CRS to projected one in meter distance units
 mydf_sf_trans <-  st_transform(mydf_sf, 3035 )  # EPSG-code  
-mydf_sp_trans <-  spTransform(mydf_sp, CRS("+init=epsg:3035"))
+mydf_sp_trans <-  spTransform(mydf_sp, CRS("+init=epsg:3035")) 
 ```
+More on the issue of moving from proj4 to proj6 in the future:
+* https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/
+<br>
+* https://cran.r-project.org/web/packages/sp/vignettes/CRS_warnings.html
+<br>
 
+Make a quick plot of the data:
 Recap for styling the plot:
 https://www.r-bloggers.com/2021/12/introduction-to-geospatial-visualization-with-the-tmap-package/
 
@@ -553,7 +560,23 @@ check here for the possibilities of what to do with the package:
 * https://cran.r-project.org/web/packages/move/vignettes/move.html
 * https://rdrr.io/cran/move/f/vignettes/move.Rmd
 
-TODO use transformed animal data for spatial measures!
+
+```{r, echo=FALSE, results='hide',eval=FALSE}
+####### TODO use transformed animal data for spatial measures! #####
+####### WTF funktioniert das nicht???????   ########
+# Ich wollte andere Koordinaten nehmen, weil unten hrBootstrap 
+# komische measures ausspuckt
+
+mydf_sf_trans$coords <- st_coordinates(mydf_sf_trans)
+tt <- st_drop_geometry(mydf_sf_trans)
+
+my_fox <- move(x = tt$coords.X, y = tt$coords.Y,
+               time=as.POSIXct(tt$timestamp.of.fix,format="%Y-%m-%d %H:%M:%S"),
+               proj= CRS("+init=epsg:3035"),
+               data=tt,
+               animal="FoxQvonStralau")  
+```
+
 
 ```{r}
 my_fox <- move(x = anim_proc$longitude, y = anim_proc$latitude,
@@ -596,13 +619,13 @@ hist(speed(my_fox)) # units? -> check ?speed
 ## Spatial aggregation - the home-range or activity range concept
 
 
-TODO def home range, MCP etc.
+See lecture!
 
 
 ### Minimum Convex Polygon
-```{r}
+```{r, echo=FALSE, results='hide', eval=FALSE}
 # TODO - something is wrong here with the units!!!! check the crs warning online
-hrBootstrap(my_fox,rep=5, level=99, unout="km2", plot=TRUE)
+hrBootstrap(my_fox,rep=5, level=99, unout="m2", plot=TRUE)
 ```
 
 You can calculate the total area covered, or, if you specify a column, you
@@ -611,7 +634,7 @@ SpatialDataFrame-Object from the '{sp}' package we created above.
 
 ```{r}
 mcp_daytime <- mcp(mydf_sp_trans[,'daytime'], percent=95, unout='km2') # MCP (95%) 
-mcp_daytime
+mcp_daytime # area for both (daytime separated) polygons
 
 hrs <- mcp.area(mydf_sp_trans[,'daytime'], percent=seq(50, 100, by = 5),unout='km2')
 hrs # home range size in km2 for the different MCP-levels
@@ -637,12 +660,19 @@ writeOGR(mcp_daytime, dsn=here('output','data-proc'),
 
 ### Kernel utility density
 
-
 ```{r}
 kud <- kernelUD(mydf_sp_trans[,'daytime'], h="href") # calculate kernel with h="href"
-kernel.area(kud,unout='km2')
-homerange2 <- getverticeshr(kud,percent = 90)
+# the output is an object with lists, accessed via str(kud)
+kernel.area(kud,unout='km2') # across all levels 5-95%
+homerange2 <- getverticeshr(kud,percent = 90) #this creates the spatial object
 gArea(homerange2,byid=T)/1e6                        # same size?
+
+```
+
+
+
+
+```{r}
 
 image(kud[[1]], col= terrain(100))
 image(kud[[2]])
