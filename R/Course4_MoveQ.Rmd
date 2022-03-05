@@ -71,15 +71,18 @@ habitat preference, behavioral analyses (e.g. Hertel et al. 2021) and
 detection of movement syndromes (personality differences) (Michelangeli et al. 2021).
 Some of the packages listed in the next chapter are designed for these analyses. 
 
-TODO plot pic (fox_Q_20190113_sks.jpg "fox q") funktioniert nicht
+```{r,eval=FALSE,echo==FALSE}
 
 [TODO - exchange Q with Caro's foxes for habitat selection, ref PhD C Scholz]
+
+```
+
 
 In the following, we will step by step start with loading and exploring movement data
 of female red fox (*Vulpes vulpes*) 'Q von Stralau', who had a small home range 
 in Berlin, Germany. She was collared in January 2018 and had a very stable daily routine
-as shown by 4 (20) min relocation intervals. For any details on the data
-please refer to Kimmig (2021) and Scholz (2020).
+as shown by 4 (20) min relocation intervals. Her location data are stored 
+in the file with the tag number 'tag5334_gps.txt'. For any details on the data please refer to Kimmig (2021) and Scholz (2020).
 
 We will, however, only use the data of one month in this exercise, 
 as data sets quickly get too big. Please note: the courses
@@ -90,12 +93,17 @@ obligatory for this tutorial.
 ## Useful (web)sites and reading
 
 *  For analysis of telemetry data: packages **adehabitatHR, adehabitatLT, move,recurse, momentuHMM, moveHMM, ctmm, amt**
-
 <br>
+
+**Methods papers** <br>
+
+* Joo, R, Boone, ME, Clay, TA, Patrick, SC, Clusella-Trullas, S, Basille, M. Navigating through the r packages for movement. J Anim Ecol. 2020; 89: 248– 267. https://doi.org/10.1111/1365-2656.13116
+* Zuur, A.F., Ieno, E.N. and Elphick, C.S. (2010), A protocol for data exploration to avoid common statistical problems. Methods in Ecology and Evolution, 1: 3-14. https://doi.org/10.1111/j.2041-210X.2009.00001.x
+
+**Example papers** <br>
 
 * Hertel, AG, Royauté, R, Zedrosser, A, Mueller, T. Biologging reveals individual variation in behavioural predictability in the wild. J Anim Ecol. 2021; 90: 723– 737. https://doi.org/10.1111/1365-2656.13406
 
-* Joo, R, Boone, ME, Clay, TA, Patrick, SC, Clusella-Trullas, S, Basille, M. Navigating through the r packages for movement. J Anim Ecol. 2020; 89: 248– 267. https://doi.org/10.1111/1365-2656.13116
 
 * Kimmig, S (2021). The ecology of red foxes (*Vulpes vulpes*) in urban environments, PhD thesis, FU Berlin. https://refubium.fu-berlin.de/handle/fub188/32478
 
@@ -104,7 +112,6 @@ obligatory for this tutorial.
 * Scholz, C (2020). The ecology of red foxes (*Vulpes vulpes*) in anthropogenic
 landscapes. PhD thesis, FU Berlin. https://refubium.fu-berlin.de/handle/fub188/29984
 
-* Zuur, A.F., Ieno, E.N. and Elphick, C.S. (2010), A protocol for data exploration to avoid common statistical problems. Methods in Ecology and Evolution, 1: 3-14. https://doi.org/10.1111/j.2041-210X.2009.00001.x
    
 
 # Getting started
@@ -122,20 +129,19 @@ In any case, my course folder has the following structure:
 
 ``` bash
 .
-└── Course4_MoveQ  (root folder)
-    ├─── data-raw  (contains the file with the GPS locations)
+└── Course4_MoveQ  #(root folder)
+    ├─── data-raw  #(contains the file with the GPS locations)
     ├─── docs
-    ├─── output    (contains the cleaned files and processed data)
+    ├─── output    #(contains the cleaned files and processed data)
     ├─── plots
-    ├─── R         (contains the R-script)
-    └ MyCourse.Rproj (the RStudio-Project file location)
+    ├─── R         #(contains the R-script)
+    └ Course4_MoveQ.Rproj #(the RStudio-Project file location)
 ```
 
 ## Necessary packages to install and load
 
 We first have to install the packages and load them before we can use the
 functions we need.
-
 
 ```{r}
 # package names:
@@ -149,7 +155,6 @@ pkgs = c("here", "sp", "sf", "dismo", "raster", "GISTools",  "rgdal",
 # install.packages(pkgs) # only run this line once for installing the packages!
 # update.packages()
 ```
-<br>
 
 Tip of the day: If you have already installed some of the packages above, you can
 first check which ones are already installed, and save the ones *not installed* in 
@@ -167,11 +172,9 @@ Now load the packages:
 
 # TODO - check if all libraries are needed. However, I guess the problem with 
 # course2-distance analysis was that a library was missing for them, and we
-# did not realize this because we have so many installed anyway
+# did not realize this because we have so many installed anyway???
 
 ```
-
-
 
 
 ```{r libraries, warning=FALSE, message=FALSE}
@@ -424,7 +427,7 @@ spatial dimensions by projecting it using the functions
 *st_as_sf()* and *st_transform()* .  
 
 ```{r}
-#-----------------------------------------------------------------------------#
+#---------------------------------------------------------------------------------------#
 ```
 
 # Data exploration
@@ -552,8 +555,8 @@ Or are these outliers? No: the lake was frozen - check the date! Note: you reall
 # TODO - how to access date of the outlier and check temperature ?
 ```
 
-## Basic movement metrics
-### Transform your data into a `{move}`object
+# Basic movement metrics
+## Transform your data into a `{move}`object
 
 check here for the possibilities of what to do with the package: 
 <br>
@@ -565,7 +568,7 @@ check here for the possibilities of what to do with the package:
 ####### TODO use transformed animal data for spatial measures! #####
 ####### WTF funktioniert das nicht???????   ########
 # Ich wollte andere Koordinaten nehmen, weil unten hrBootstrap 
-# komische measures ausspuckt
+# komische measures ausspuckt - viel zu kleine HRs
 
 mydf_sf_trans$coords <- st_coordinates(mydf_sf_trans)
 tt <- st_drop_geometry(mydf_sf_trans)
@@ -588,9 +591,9 @@ my_fox <- move(x = anim_proc$longitude, y = anim_proc$latitude,
 
 ```
 
-### Time lag, turning angle and speed
+## Time lag, turning angle and speed
 
-#### Time lags between the fixes:
+### Time lags between the fixes:
 ```{r}
 timeLag(my_fox, unit = "mins")[1:5] # varies a lot, but minimum here 20 min
 min(timeLag(my_fox, units="mins"))
@@ -598,7 +601,7 @@ mean(timeLag(my_fox, units="mins"))
 max(timeLag(my_fox, units="mins"))
 ```
 
-#### Turning angles (makes only sense with high resolution data):
+### Turning angles (makes only sense with high resolution data):
 ```{r}
 turnang <- angle(my_fox)
 # turnang <- turnAngleGc(my_fox) # the same
@@ -607,7 +610,7 @@ turnang <- angle(my_fox)
 hist(abs(turnang))
 ```
 
-#### Speed and step length
+### Speed and step length
 ```{r}
 steplength <- distance(my_fox) # know your units!
 hist(steplength)
@@ -616,13 +619,15 @@ max(steplength) # max 1 km in 20 min = 3 km / h
 hist(speed(my_fox)) # units? -> check ?speed
 ```
 
-## Spatial aggregation - the home-range or activity range concept
+# The homerange concept - MCP, kernel, aKDE
 
 
 See lecture!
 
 
 ### Minimum Convex Polygon
+Unfortunately, we have to use *SpatialDataFrame*-Objects for activity range 
+calclulation, as the package '{adehabitatHR}' is based on the old '{sp}'-formaat.
 ```{r, echo=FALSE, results='hide', eval=FALSE}
 # TODO - something is wrong here with the units!!!! check the crs warning online
 hrBootstrap(my_fox,rep=5, level=99, unout="m2", plot=TRUE) #it is ha, not m2
@@ -677,7 +682,10 @@ image(kud[[1]], col= viridis(100, direction = -1))
 xyz <- as.image.SpatialGridDataFrame(kud[[1]])
 contour(xyz, add=TRUE)
 points(mydf_sp_trans, cex= 0.01, col='red')
+```
 
+
+```{r}
 # save it as shapefile - mind - here we can only save one contour line, 
 # in this case the 90% kernel:
 writeOGR(kud90, dsn=here('output','data-proc'), 
@@ -685,7 +693,7 @@ writeOGR(kud90, dsn=here('output','data-proc'),
 
 # make the crosscheck: load and plot
 kernel_ud90_sf <- st_read(dsn=here('output','data-proc'),layer="kernel_ud90")
-plot(kernel_ud90_sf$id)
+plot(kernel_ud90_sf[,'id'])
 ```
 
 
@@ -717,6 +725,11 @@ kd.list <- list(x=xy[,1],y=xy[,2],z=myz)
 plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rotation' in plot upper right
 #########  ende krass cooler plot ########
 ```
+
+
+
+
+
 
 
 ```{r, eval=FALSE, echo=FALSE, results='hide'}
