@@ -625,7 +625,7 @@ See lecture!
 ### Minimum Convex Polygon
 ```{r, echo=FALSE, results='hide', eval=FALSE}
 # TODO - something is wrong here with the units!!!! check the crs warning online
-hrBootstrap(my_fox,rep=5, level=99, unout="m2", plot=TRUE)
+hrBootstrap(my_fox,rep=5, level=99, unout="m2", plot=TRUE) #it is ha, not m2
 ```
 
 You can calculate the total area covered, or, if you specify a column, you
@@ -719,7 +719,16 @@ plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rota
 ```
 
 
-```{r}
+```{r, eval=FALSE, echo=FALSE, results='hide'}
+
+# TODO ignore this for now
+
+
+# TODO # something I really don't understand are the different sizes
+# in mcp kernel ctmm - > the units are wrong, it is either ha, m2 or km2, but
+# it is never correct in all three applications
+
+
 #############################################################################
 ######## advanced home range analyses - variogram and  aKDE  ################
 #############################################################################
@@ -728,30 +737,30 @@ library(ctmm)
 # please read the vignettes of ctmm package to understand what is done in the following
 # https://cran.r-project.org/web/packages/ctmm/vignettes/variogram.html
 # https://cran.r-project.org/web/packages/ctmm/vignettes/akde.html
-```
 
-This package needs a 'telemetry' object, which can either be created from a 
-'data.frame' or can use our move-Object fom above.
-```{r}
-# anim_proc$individual.local.identifier <- anim_proc$tag.serial.number
-# anim_proc$timestamp                   <- anim_proc$timestamp.of.fix
-# anim_proc$location.long               <- anim_proc$longitude
-# anim_proc$location.lat                <- anim_proc$latitude
-# ctmm_anim <- as.telemetry(anim_proc)
+# This package needs a 'telemetry' object, which can either be created from a 
+# 'data.frame' or can use our move-Object from above.
 
-ctmm_fox <- as.telemetry(move_fox)
+ # anim_proc$individual.local.identifier <- anim_proc$tag.serial.number
+ # anim_proc$timestamp                   <- anim_proc$timestamp.of.fix
+ # anim_proc$location.long               <- anim_proc$longitude
+ # anim_proc$location.lat                <- anim_proc$latitude
+ # ctmm_anim <- as.telemetry(anim_proc)
+
+ctmm_anim <- as.telemetry(my_fox)
 
 
-ctmm_anim <- as.telemetry(animal[1:1000,]) #I am restricting the data to the first points for saving computation time
-plot(ctmm_anim) #how strange! try:
+ctmm_anim <- as.telemetry(my_fox[1:1000,]) #I am restricting the data to the first points for saving computation time
+plot(ctmm_anim) #how strange! seems to be the DOP
+# https://cran.r-project.org/web/packages/ctmm/vignettes/error.html
 help(plot.telemetry)
-ctmm::plot(ctmm_anim, pch=17,lwd=0.1,cex=0.00001,xlim= c(-2000,2000)) #something does not work here....
+ctmm::plot(ctmm_anim, pch='.',lwd=0.1,cex=0.00001,xlim= c(-2000,2000)) #something does not work here....
 
 # please do the following steps for fitting the best model (movement process) to your data
 # https://cran.r-project.org/web/packages/ctmm/vignettes/variogram.html
 
 SVF <- variogram(ctmm_anim)
-plot(SVF,fraction=0.008) #Achtung, hectares !
+plot(SVF,fraction=0.10) # TODO # #Achtung, hectares ! something is wrong with the units, should be 0.55 km2 or 55 ha!
 title("zoomed in")
 # this info gives first parameters for sigma, tau etc for fitting m.ouf (see below)
 # restricted space use (plateau),
