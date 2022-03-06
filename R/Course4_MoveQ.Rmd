@@ -709,8 +709,8 @@ st_crs(mcp95_sf)       <- 3035
 # TODO eigentlich wollte ich alles übereinander plotten, also mcp, kernel, punkte
 
 ggplot(kernel_ud90_sf) +
-    geom_sf() #+
-   # geom_sf(mydf_sf_trans, size = 1, shape = 23, fill = "darkred")
+    geom_sf() 
+ #  + geom_sf(mydf_sf_trans, size = 1, shape = 23, fill = "darkred")
 ```
 
 
@@ -744,7 +744,9 @@ plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rota
 ```
 
 
+# Nothing makes sense but in the light of environmental information
 
+-> Exercise 4.2
 
 
 
