@@ -748,6 +748,9 @@ plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rota
 
 -> Exercise 4.2
 
+# Exercise 4.2
+
+
 
 
 
@@ -890,6 +893,9 @@ library(amt)
 
 ```
 
+```{r, echo=FALSE, eval=FALSE, results='hide'}
+TODO - recurse analysis - favourite places of Q
+```
 
 
 # END
@@ -897,7 +903,11 @@ library(amt)
 Adding the session info can be very helpful when going back to old scripts or 
 using scripts of others:
 
+<details><summary>Session Info</summary>
+
 ```{r session-info}
 sessionInfo()
 ```
+
+</details>
 
