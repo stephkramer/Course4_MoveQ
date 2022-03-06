@@ -43,22 +43,31 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 #or on GUI: knit -> knit directory -> project directory
 ```
 
+# Exercise 4.2
+There is telemetry data available from three animals (DieTiere_32633.shp) in the
+folder data-raw. Additionally, land cover (Landnutzung_3035.shp) and rivers (linearegew_32633.shp) are available in the geo-raw folder. 
+Land use has a column 'NS1' with coded info on 1 (urban areas), 2 (), 3(),
+4(), 5 (water bodies).
 
-#  Exercises Course 4
-
-## Exercise 4.2
-There is telemetry data available from three 
+After loading libraries, the data and making a plot, please do the following:
+a) Calculate their home ranges and the centroid of the home range (hint: st_centroid)
+b) Buffer the home range with the mean displacement per step of all three animals
+c) Clip the home ranges with the underlying landscape and calculate the percentage
+of land use classes within the home range (hint: use st_intersection)
 
 
 ## Get started
+
 ```{r}
 # Open libraries
 ## general basics
 library(here)
+library(ggplot2)
 
-## the basic packages for spatial analyses
+## the basic packages for spatial analyses and viz
 library(sf)
 library(terra)
+library(tmap)
 
 ## for telemetry analyses
 library(move)
@@ -87,23 +96,62 @@ output_wd   <- here('output')
 ```
 
 ### Load data
+
 ```{r}
-animls <- st_read("DieTiere.shp", layer="DieTiere",dsn=data_raw_wd)  
-lndcov <- st_read("Landnutzung.shp", layer="Landnutzung", dsn=geo_raw_wd)    
-rivers <- st_read("linearegew.shp", layer="linearegew", dsn=geo_raw_wd)   
-kettl  <- read.table(paste0(data_raw_wd,'/KettleHoles.txt'), header=TRUE, sep='\t') 
+# if you are not sure about the file names, check the folder content with
+# list.files(data_raw_wd)
+animals <- st_read(dsn=data_raw_wd,layer="DieTiere_32633")  
+landcov <- st_read(layer="Landnutzung_3035", dsn=geo_raw_wd)    
+rivers  <- st_read(layer="linearegew_32633", dsn=geo_raw_wd)   
+```
 
+### Define or transform CRS
 
+```{r}
+lc_32633 <- st_transform(landcov, 32633)
+```
 
-head(Kettl); class(Kettl)  # data.frame
+### Make a plot of the data
 
-# convert txt-file to SpatialPointsDataFrame
-coordinates(Kettl) <- ~MyX + MyY
-head(Kettl); class(Kettl) # ok 
+```{r}
+#Create a color code for the 5 land use classes
+mycol <- c('red','antiquewhite','chartreuse4','cornsilk4','blue')
+
+# TODO # immer scheitere ich an den plots!!!!!
+
+plot(lc_32633[,'NS1'], col=mycol[lc_32633$NS1],border='transparent')
+plot(animals[,1],col=animals$ID,add=TRUE) 
+plot(rivers[,1], col= 'blue', lwd=0.1,add=T)
 
 ```
 
+```{r}
+#Create a color code for the 5 land use classes
+mycol <- c('red','antiquewhite','chartreuse4','cornsilk4','blue')
 
+# TODO - plot mit colorcode mycol funktioniert nicht....
+
+ggplot(lc_32633) + 
+  geom_sf(data=lc_32633[,'NS1'], aes(fill  = mycol[NS1]), color='transparent') +
+  geom_sf(data=animals) + 
+  geom_sf(data=rivers, color='blue') +
+  theme_classic()
+```
+
+
+```{r}
+#Create a color code for the 5 land use classes
+mycol <- c('red','antiquewhite','chartreuse4','cornsilk4','blue')
+myid  <- c('yellow','pink','red')
+
+tmap_mode(mode = "view")
+tm_shape(shp = lc_32633[,'NS1']) + 
+  tm_polygons(col = "NS1", palette = mycol) +
+tm_shape(shp = animals[,'ID']) + 
+  tm_dots(col = "ID", palette = myid) +
+tm_shape(shp = rivers[,1]) + 
+  tm_lines(col = 'blue') 
+```
 
 
 

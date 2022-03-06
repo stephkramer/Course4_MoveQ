@@ -894,7 +894,10 @@ library(amt)
 ```
 
 ```{r, echo=FALSE, eval=FALSE, results='hide'}
-TODO - recurse analysis - favourite places of Q
+TODO 
+
+- work with d6berlin - load imperviousness and create random points and check the difference
+- recurse analysis - favourite places of Q
 ```
 
 
