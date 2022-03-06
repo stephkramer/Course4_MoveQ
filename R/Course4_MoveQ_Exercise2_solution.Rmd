@@ -1,0 +1,121 @@
+---
+title: "Tutorial Part IV - Movement - Solution Exercise 2"
+author: "Stephanie Kramer-Schadt & Cédric Scherer"
+date: "`r Sys.setlocale('LC_TIME','C'); paste('Last Update', format(Sys.time(), '%B %e, %Y'))`"
+output:
+  rmdformats::readthedown:
+    highlight: kate
+    toc_depth: 2
+    toc_float: true
+editor_options:
+  chunk_output_type: console
+params:
+  date: !r Sys.Date()
+---
+
+<style>
+h1 {
+  color: Orange ;
+}
+h2, h3, h4, h5, h6, legend {
+  color: Indigo ;
+}
+p {
+  line-height:170%;
+}
+#sidebar h2 {
+  background-color: Indigo;
+}
+code {
+  color: Indigo ;
+}
+.exercise {
+  color: #824b00;
+}
+</style>
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
+                      fig.width = 9, fig.height = 6, dev = "ragg_png")
+#knitr::opts_knit$set(root.dir = 'C:/Users/kramer/PopDynIZW Dropbox/Steph Kramer')
+#or on GUI: knit -> knit directory -> project directory
+```
+
+
+#  Exercises Course 4
+
+## Exercise 4.2
+There is telemetry data available from three 
+
+
+## Get started
+```{r}
+# Open libraries
+## general basics
+library(here)
+
+## the basic packages for spatial analyses
+library(sf)
+library(terra)
+
+## for telemetry analyses
+library(move)
+library(adehabitatHR)         
+
+##
+library(sp)
+library(dismo)
+library(raster)
+library(GISTools)
+library(rgdal)
+library(maptools)
+library(rgeos)
+library(rgl)
+library(raster)
+library(rasterVis)
+```
+
+### Define workspace and folder structure
+
+```{r}
+work_wd <- here()
+data_raw_wd <- here('data-raw')
+geo_raw_wd  <- here('data-raw/geo-raw')
+output_wd   <- here('output')
+```
+
+### Load data
+```{r}
+animls <- st_read("DieTiere.shp", layer="DieTiere",dsn=data_raw_wd)  
+lndcov <- st_read("Landnutzung.shp", layer="Landnutzung", dsn=geo_raw_wd)    
+rivers <- st_read("linearegew.shp", layer="linearegew", dsn=geo_raw_wd)   
+kettl  <- read.table(paste0(data_raw_wd,'/KettleHoles.txt'), header=TRUE, sep='\t') 
+
+
+
+head(Kettl); class(Kettl)  # data.frame
+
+# convert txt-file to SpatialPointsDataFrame
+coordinates(Kettl) <- ~MyX + MyY
+head(Kettl); class(Kettl) # ok 
+
+```
+
+
+
+
+
+# END
+
+---
+
+<details><summary>Session Info</summary>
+
+```{r sessionInfo}
+Sys.time()
+sessionInfo()
+```
+
+</details>
