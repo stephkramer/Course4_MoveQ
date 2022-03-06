@@ -158,7 +158,7 @@ pkgs = c("here", "sp", "sf", "dismo", "raster", "GISTools",  "rgdal",
 
 Tip of the day: If you have already installed some of the packages above, you can
 first check which ones are already installed, and save the ones *not installed* in 
-an object called <my_packages> and only install the missing ones:
+an object called 'my_packages' and only install the missing ones:
 
 ```{r}
 my_packages <- pkgs[!(pkgs %in% installed.packages()[,"Package"])]
@@ -530,14 +530,15 @@ coordinate reference system in meters:
 mydf_sf_trans <-  st_transform(mydf_sf, 3035 )  # EPSG-code  
 mydf_sp_trans <-  spTransform(mydf_sp, CRS("+init=epsg:3035")) 
 ```
-More on the issue of moving from proj4 to proj6 in the future:
+Recently, there are issues with the missing datum in the CRS-specifications. We
+ignore this for now. More on the issue of moving from proj4 to proj6 in the future: <br>
 * https://inbo.github.io/tutorials/tutorials/spatial_crs_coding/
 <br>
 * https://cran.r-project.org/web/packages/sp/vignettes/CRS_warnings.html
 <br>
 
 Make a quick plot of the data:
-Recap for styling the plot:
+Recap for styling the plot:<br>
 https://www.r-bloggers.com/2021/12/introduction-to-geospatial-visualization-with-the-tmap-package/
 
 ```{r}
@@ -560,8 +561,8 @@ Or are these outliers? No: the lake was frozen - check the date! Note: you reall
 
 check here for the possibilities of what to do with the package: 
 <br>
-* https://cran.r-project.org/web/packages/move/vignettes/move.html
-* https://rdrr.io/cran/move/f/vignettes/move.Rmd
+* https://cran.r-project.org/web/packages/move/vignettes/move.html <br>
+* https://rdrr.io/cran/move/f/vignettes/move.Rmd <br>
 
 
 ```{r, echo=FALSE, results='hide',eval=FALSE}
@@ -656,8 +657,7 @@ than the nighttime activity.
 mcp_month <- mcp(mydf_sp_trans[,'month'], percent=95, unout='km2') # MCP (95%) 
 mcp_month
 ```
-Note that there is a activity range for October (month 10), but the animal was only
-collared  30.10.! This definitely does not make sense.
+Note that there is an activity range calculated for October (month 10), but the animal was only collared  30.10.! This definitely does not make sense.
 <br>
 Now save the MCPs as ESRI shapefiles. 
 ```{r}
@@ -692,19 +692,30 @@ points(mydf_sp_trans, cex= 0.01, col='red')
 # in this case the 90% kernel:
 writeOGR(kud90, dsn=here('output','data-proc'), 
          layer="kernel_ud90",'ESRI Shapefile',overwrite=T)
+```
 
+
+```{r}
 # make the crosscheck: load and plot
 kernel_ud90_sf <- st_read(dsn=here('output','data-proc'),layer="kernel_ud90")
-# note: the CRS is not defined! So assign it:
+mcp95_sf       <- st_read(dsn=here('output','data-proc'),layer="mcp95_daytime_foxQ")
+# note: the CRS is lost and not defined! So assign it again:
 st_crs(kernel_ud90_sf) <- 3035
+st_crs(mcp95_sf)       <- 3035
+```
 
-plot(kernel_ud90_sf[,'id'])
-points(mydf_sp_trans[,1], cex= 0.01, col='red') # TODO - wiesooooooo???????
+
+```{r}
+# TODO eigentlich wollte ich alles übereinander plotten, also mcp, kernel, punkte
+
+ggplot(kernel_ud90_sf) +
+    geom_sf() #+
+   # geom_sf(mydf_sf_trans, size = 1, shape = 23, fill = "darkred")
 ```
 
 
 Do the following only on a fast computer:
-```{r,echo=FALSE}
+```{r,echo=TRUE}
 ##### der krass coole 3D plot
 
 #install.packages("devtools")
