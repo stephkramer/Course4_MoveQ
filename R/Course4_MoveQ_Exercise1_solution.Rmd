@@ -34,8 +34,6 @@ code {
 }
 </style>
 
----
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE, 
                       fig.width = 9, fig.height = 6, dev = "ragg_png")
@@ -49,38 +47,43 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 ## Exercise 4.1
 
 This is recap from Course2. Please plot the animal relocations in two different 
-colours for column 'daytime', using the *data.frame* and one of 
-the options with ´{ggplot2}´,´{ggpmap}´ or ´{leaflet}´. Use the
-processed file of fox Q (tag5334_gps_proc) and do it in a separate script. Save 
-your script as Course4_Exercise1_*yourname*.R  .
+colours based on the column `daytime`, using the *data.frame* and one of 
+the options to create maps with `{ggplot2}`, `{ggpmap}`, `{leaflet}` or `{tmap}`.
+Use the processed file of fox Q (*tag5334_gps_proc*) and do it in a separate script. 
+Save your script as `Course4_Exercise1_*yourname*.R`.
 <br><br>
-Hint: Remember to load the libraries.
+Hint: Remember to load the relevant libraries.
 Note that you might want to plot the locations in the correct
 spatial dimensions by projecting it using the functions
-*st_as_sf()* and *st_transform()* .  
+`st_as_sf()` and `st_transform()`.  
 
-## Load the processed data file
+***
+
+a. Load the processed data file
 
 ```{r libs, echo=TRUE}
-library(here); library(sf); library(ggplot2); library(ggmap); library(leaflet);
-library(tmap) ## NOTE CED: Ich habe jetzt die Lribaries immer dann geladen, wenn sie notwendig sind; generell ist abtrennen mit ; übrigens als bad practice gelabeled, evtl nicht so zeigen
+library(here)
+library(sf)
 ```
 
 
 ```{r, echo=-2}
-animal <- readRDS(file = here('output/data-proc/tag5334_gps_proc.Rds')) 
+animal <- readRDS(file = here("output", "data-proc", "tag5334_gps_proc.Rds")) 
 # animal <- readRDS(file = 'C:/Users/kramer/PopDynIZW Dropbox/Steph #Kramer/_GitHub/Course4_MoveQ/output/data-proc/tag5334_gps_proc.Rds')
 
 ## transform into spatial simple feature sf object
-mydf_sf <- st_as_sf(x = data.frame(animal),
+mydf_sf <- st_as_sf(x = animal, ## data.frame(animal) -> bei mir geht's auch ohne data.frame()
                     coords = c("longitude", "latitude"),
                     crs = 4326,
                     sf_column_name = "geometry" )
 ## and project
 mydf_sf_trans <- st_transform(mydf_sf, 5631)  ## EPSG-code Pulkovo
 ```
+<br>
 
-## Plot the data
+b. Plot the data
+
+***Base R***
 
 A quick plot from the simple *data.frame*
 
@@ -92,16 +95,25 @@ plot(animal$latitude ~ animal$longitude,
 ```
 <br>
 
-A quick plot of the movement path, using only the first 50 rows
+A quick plot of the movement path, using only the first 50 observations:
 
 ```{r}
 plot(animal$latitude[1:50] ~ animal$longitude[1:50], type= 'l') 
 ```
 <br>
 
-*ggplot2:*
+The problem: all of the observations are not projected but use the Cartesian coordinates (i.e. in a default, rectangular 2-D projection).
+<br>
+
+---
+
+***`{ggplot2}`***
+
+The first approach might be to plot the x and y coordinates with using `geom_point()`:
 
 ```{r}
+library(ggplot2)
+
 baseplot_df <- 
   ggplot(data = animal, 
          aes(x = longitude,
@@ -116,7 +128,9 @@ baseplot_df
 ```
 <br>
 
-Much nicer with `{ggplot2}` and the projected sf object with `geom_sf()`:
+Note that the `baseplot_df` uses x and y coordinates but not the projection (i.e. the distance between points changes when changing the aspect ratio of the plot) as it uses a Cartesian coordinate system as in the base plot. 
+
+As we are dealing with spatial data, it is better to use the projected sf object with the dedicated `geom_sf()` layer for `{ggplot2}`:
 
 ```{r}
 baseplot_sf <- 
@@ -156,10 +170,16 @@ densplot
 # ggsave(here("plots", "plot_pointdensity.png"), dpi = 800, height = 6, width = 6)
 ```
 
-We can also add a background using the `{ggmap}` package. Check here for a quick start to `{ggmap}`:
+---
+
+***`{ggmap}`***
+
+We can also add a background using the `{ggmap}` package. Check the cheatsheet for a quick start to `{ggmap}`:
 https://www.nceas.ucsb.edu/sites/default/files/2020-04/ggmapCheatsheet.pdf
 
 ```{r}
+library(ggmap)
+
 ## define a bounding box for the plot
 b <- c(13.460, 52.485, 13.490, 52.500) ## make large enough to plot all data!
 
@@ -174,9 +194,15 @@ ggmap(my_tiles) +
 ```
 <br>
 
-A nicer interactive plot with leaflet. The first location of the track is marked:
+---
+
+***`{leaflet}`***
+
+A nice interactive plot can be created with `{leaflet}`. The first location of the track is marked:
 
 ```{r}
+library(leaflet)
+
 # get first location of track
 base_wgs84_x <- animal$longitude[1]
 base_wgs84_y <- animal$latitude[1]
@@ -195,22 +221,37 @@ m_leaf <- leaflet(animal) %>%
              fillColor = "blue",
              fillOpacity = 0.3) 
 
-m_leaf ## leaflet is bad for export -> create maps in ggmap instead!
+m_leaf
 ```
-
 <br>
 
+`{leaflet}` maps are great for interactive usage but bad for export -> create maps with `{ggplot2}` and `{ggmap}` or `{tmap}` instead!
 
-Finally via `{tmap}`:
+---
+
+***`{tmap}`***
+
+Finally a static and an interactive map via `{tmap}`:
 
 ```{r}
+library(tmap)
+
 tmap_mode(mode = "plot")
-  tm_shape(shp = mydf_sf_trans) + 
-    tm_dots(size = 0.01, 
-            col = "daytime",  
-            alpha = 0.5) 
+
+tm_shape(shp = mydf_sf_trans) + 
+  tm_dots(size = 0.01, 
+          col = "daytime",  
+          alpha = 0.5) 
 ```
 
+```{r}
+tmap_mode(mode = "view")
+
+tm_shape(shp = mydf_sf_trans) + 
+  tm_dots(size = 0.01, 
+          col = "daytime",  
+          alpha = 0.5) 
+```
 
 # END
 
