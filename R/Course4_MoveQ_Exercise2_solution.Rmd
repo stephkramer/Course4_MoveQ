@@ -46,14 +46,15 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 # Exercise 4.2
 There is telemetry data available from three animals (DieTiere_32633.shp) in the
 folder data-raw. Additionally, land cover (Landnutzung_3035.shp) and rivers (linearegew_32633.shp) are available in the geo-raw folder. 
-Land use has a column 'NS1' with coded info on 1 (urban areas), 2 (), 3(),
-4(), 5 (water bodies).
+Land use has a column 'NS1' with coded info on 1 (urban areas), 2 (agriculture), 
+3(forest), 4(swamps), 5 (water bodies).
 
 After loading libraries, the data and making a plot, please do the following:
-a) Calculate their home ranges and the centroid of the home range (hint: st_centroid)
+a) Calculate their home ranges.
 b) Buffer the home range with the mean displacement per step of all three animals
 c) Clip the home ranges with the underlying landscape and calculate the percentage
 of land use classes within the home range (hint: use st_intersection)
+
 
 
 ## Get started
@@ -69,21 +70,22 @@ library(sf)
 library(terra)
 library(tmap)
 
-## for telemetry analyses
+## for telemetry and home range analyses
 library(move)
-library(adehabitatHR)         
+library(adehabitatHR) 
+library(sp)
+
 
 ##
-library(sp)
-library(dismo)
-library(raster)
-library(GISTools)
-library(rgdal)
-library(maptools)
-library(rgeos)
-library(rgl)
-library(raster)
-library(rasterVis)
+#library(dismo)
+#library(raster)
+#library(GISTools)
+#library(rgdal)
+#library(maptools)
+#library(rgeos)
+#library(rgl)
+#library(raster)
+#library(rasterVis)
 ```
 
 ### Define workspace and folder structure
@@ -117,8 +119,6 @@ lc_32633 <- st_transform(landcov, 32633)
 #Create a color code for the 5 land use classes
 mycol <- c('red','antiquewhite','chartreuse4','cornsilk4','blue')
 
-# TODO # immer scheitere ich an den plots!!!!!
-
 plot(lc_32633[,'NS1'], col=mycol[lc_32633$NS1],border='transparent')
 plot(animals[,1],col=animals$ID,add=TRUE) 
 plot(rivers[,1], col= 'blue', lwd=0.1,add=T)
@@ -138,7 +138,6 @@ ggplot(lc_32633) +
   theme_classic()
 ```
 
-
 ```{r}
 #Create a color code for the 5 land use classes
 mycol <- c('red','antiquewhite','chartreuse4','cornsilk4','blue')
@@ -151,6 +150,72 @@ tm_shape(shp = animals[,'ID']) +
   tm_dots(col = "ID", palette = myid) +
 tm_shape(shp = rivers[,1]) + 
   tm_lines(col = 'blue') 
+```
+
+
+# a) & b)
+First , we retrieve the steplength. For this, transform the sf-Object into a move-Object.
+
+```{r}
+anim_coords <- as.data.frame(st_coordinates(animals)) #returns a list
+animals$X <- anim_coords$X
+animals$Y <- anim_coords$Y
+animals_ng <- st_drop_geometry(animals)
+
+animals_move <- move(x=animals_ng$X, y=animals_ng$Y,
+                     time = as.POSIXct(animals_ng$MYDATUM, 
+                                       format = "%Y-%m-%d 8:0:0", tz="CET"),
+                     proj=CRS("+init=epsg:32633"),
+                     data=animals_ng, animal = animals_ng$ID, sensor='GPS')
+plot(animals_move, type='l') 
+
+# since we have 3 animals, a list with 3 elements is returned
+steplength_per_animal <- distance(animals_move)
+mean_stepl_p_anim <- lapply(steplength_per_animal,mean)
+(mean(unlist(mean_stepl_p_anim)))
+```
+
+The mean step length is approx. 300 m.
+
+```{r}
+# for using mcp() in {adehabitatHR}, convert to SpatialPointsDataframe of {sp}
+animals_sp <-as(animals, "Spatial")
+mcp <- mcp(animals_sp[,'ID'], percent=95) 
+
+# the buffer command needs however an sf object
+mcp_sf  <- as(mcp, "sf")
+mcp_buf <- st_buffer(mcp_sf, 300)
+
+# the plot is correct
+plot(mcp)                         
+plot(animals_sp, add=TRUE, col= animals_sp$ID) 
+plot(mcp_buf[,1], add=TRUE)
+plot(animals_sp, add=TRUE, col= animals_sp$ID) 
+plot(mcp, add=TRUE)
+
+# save buffer
+st_write(obj = mcp_buf, 
+         dsn = output_wd, 
+         layer = 'mcp_buffer_32633',
+         driver = 'ESRI Shapefile', 
+         delete_layer = TRUE)
+```
+
+c) clip the home ranges with the land use
+
+```{r}
+# check the total area of the buffer in km2:
+buf_area <- st_area(mcp_buf)/1e6
+
+# clip
+mcp_buf_lc <- st_intersection(lc_32633, mcp_buf) 
+# have a look at the object:
+mcp_buf_lc
+
+# now, for each animal id, summarize the area per NS1-category:
+tapply(mcp_buf_lc$AREA,mcp_buf_lc$id,sum)
+
+
 ```
 
 
