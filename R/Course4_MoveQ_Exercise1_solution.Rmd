@@ -46,7 +46,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 
 ## Exercise 4.1
 
-This is recap from Course2. Please plot the animal relocations in two different 
+**This is a recap from Course2. Please plot the animal relocations in two different 
 colours based on the column `daytime`, using the *data.frame* and one of 
 the options to create maps with `{ggplot2}`, `{ggpmap}`, `{leaflet}` or `{tmap}`.
 Use the processed file of fox Q (*tag5334_gps_proc*) and do it in a separate script. 
@@ -55,33 +55,39 @@ Save your script as `Course4_Exercise1_*yourname*.R`.
 Hint: Remember to load the relevant libraries.
 Note that you might want to plot the locations in the correct
 spatial dimensions by projecting it using the functions
-`st_as_sf()` and `st_transform()`.  
+`st_as_sf()` and `st_transform()`.**
+<br><br>
 
-***
-
-a. Load the processed data file
+* **a.** Load the processed data file
 
 ```{r libs, echo=TRUE}
 library(here)
 library(sf)
 ```
 
+Read the `rds` file:
 
 ```{r, echo=-2}
 animal <- readRDS(file = here("output", "data-proc", "tag5334_gps_proc.Rds")) 
 # animal <- readRDS(file = 'C:/Users/kramer/PopDynIZW Dropbox/Steph #Kramer/_GitHub/Course4_MoveQ/output/data-proc/tag5334_gps_proc.Rds')
+```
 
-## transform into spatial simple feature sf object
-mydf_sf <- st_as_sf(x = animal, ## data.frame(animal) -> bei mir geht's auch ohne data.frame()
+Transform the data into spatial simple feature (`sf`) object
+
+```{r}
+mydf_sf <- st_as_sf(x = animal, ## CED: data.frame(animal) -> bei mir geht's auch ohne data.frame()
                     coords = c("longitude", "latitude"),
-                    crs = 4326,
-                    sf_column_name = "geometry" )
-## and project
+                    crs = 4326)#,
+                    #sf_column_name = "geometry") ## CED: ebenfalls unnötig da default?
+```
+
+```{r}
+## and project ## CED: Wieso eigentlich? Und woher kennen sie die Projektion?
 mydf_sf_trans <- st_transform(mydf_sf, 5631)  ## EPSG-code Pulkovo
 ```
 <br>
 
-b. Plot the data
+* **b.** Plot the data
 
 ***Base R***
 
@@ -105,7 +111,7 @@ plot(animal$latitude[1:50] ~ animal$longitude[1:50], type= 'l')
 The problem: all of the observations are not projected but use the Cartesian coordinates (i.e. in a default, rectangular 2-D projection).
 <br>
 
----
+<br><hr><br>
 
 ***`{ggplot2}`***
 
@@ -170,7 +176,7 @@ densplot
 # ggsave(here("plots", "plot_pointdensity.png"), dpi = 800, height = 6, width = 6)
 ```
 
----
+<br><hr><br>
 
 ***`{ggmap}`***
 
@@ -192,9 +198,8 @@ ggmap(my_tiles) +
              size = 0.05) + 
   labs(x = "Latitude", y = "Longitude", title = "Telemetry locations")
 ```
-<br>
 
----
+<br><hr><br>
 
 ***`{leaflet}`***
 
@@ -227,7 +232,7 @@ m_leaf
 
 `{leaflet}` maps are great for interactive usage but bad for export -> create maps with `{ggplot2}` and `{ggmap}` or `{tmap}` instead!
 
----
+<br><hr><br>
 
 ***`{tmap}`***
 
@@ -253,9 +258,7 @@ tm_shape(shp = mydf_sf_trans) +
           alpha = 0.5) 
 ```
 
-# END
-
----
+<br><hr><br>
 
 <details><summary>Session Info</summary>
 
