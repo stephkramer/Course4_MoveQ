@@ -73,7 +73,7 @@ Some of the packages listed in the next chapter are designed for these analyses.
 
 ```{r,eval=FALSE,echo=FALSE,results='hide'}
 
-[TODO - exchange Q with Caro's foxes for habitat selection, ref PhD C Scholz]
+[TODO later - exchange Q with Caro's foxes for habitat selection, ref PhD C Scholz]
 
 ```
 
@@ -502,7 +502,7 @@ Apart from the outliers between 11 and 13 o'clock, the active phase was
 during the dark hours.
 
 ```{r,echo=FALSE, eval=FALSE}
-# TODO but not urgent 
+# TODO for later,  not urgent 
 # heatmap /activity plot for weeks~hrs (makes only sense for 
 # yearly data)
 ```
@@ -553,7 +553,8 @@ Or are these outliers? No: the lake was frozen - check the date! Note: you reall
 <br>
 
 ```{r,echo=FALSE, eval=FALSE}
-# TODO - how to access date of the outlier and check temperature ?
+# TODO later - how to access date of the outlier and check temperature ?
+# interactive? with labelling?
 ```
 
 # Basic movement metrics
