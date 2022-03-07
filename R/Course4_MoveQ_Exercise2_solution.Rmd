@@ -44,17 +44,19 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 ```
 
 # Exercise 4.2
+Three animals have been collared and tracked, and we want to know their home range size and whether the animals actually avoid agriculture and prefer forest. <br>
 There is telemetry data available from three animals (DieTiere_32633.shp) in the
 folder data-raw. Additionally, land cover (Landnutzung_3035.shp) and rivers (linearegew_32633.shp) are available in the geo-raw folder. 
 Land use has a column 'NS1' with coded info on 1 (urban areas), 2 (agriculture), 
-3(forest), 4(swamps), 5 (water bodies).
+3(forest), 4(swamps), 5 (water bodies).<br>
 
-After loading libraries, the data and making a plot, please do the following:
-a) Calculate their home ranges.
-b) Buffer the home range with the mean displacement per step of all three animals
-c) Clip the home ranges with the underlying landscape and calculate the percentage
-of land use classes 2/ agriculture and 3/ forest within the home range (hint: use st_intersection)
-d) In which land use are the animals actually ? Extract underlying land use. 
+After loading libraries, the data and making a plot, please do the following:<br>
+a) Calculate their home ranges.<br>
+b) Buffer the home range with the mean displacement per step of all three animals<br>
+c) Clip the home ranges with the underlying landscape and calculate the percentage<br>
+of land use classes 2/ agriculture and 3/ forest within the home range (hint: use st_intersection)<br>
+d) In which land use are the animals actually located? Extract land use underneath
+each telemetry location (hint: st_join). Do the animals actually avoid agriculture? <br>
 
 
 
@@ -75,18 +77,6 @@ library(tmap)
 library(move)
 library(adehabitatHR) 
 library(sp)
-
-
-##
-#library(dismo)
-#library(raster)
-#library(GISTools)
-#library(rgdal)
-#library(maptools)
-#library(rgeos)
-#library(rgl)
-#library(raster)
-#library(rasterVis)
 ```
 
 ### Define workspace and folder structure
@@ -119,6 +109,8 @@ lc_32633 <- st_transform(landcov, 32633)
 ```{r}
 #Create a color code for the 5 land use classes
 mycol <- c('red','antiquewhite','chartreuse4','cornsilk4','blue')
+
+## TODO - argh, Punkte und Linien erscheinen nicht im html....
 
 plot(lc_32633[,'NS1'], col=mycol[lc_32633$NS1],border='transparent')
 plot(animals[,1],col=animals$ID,add=TRUE) 
@@ -176,7 +168,7 @@ mean_stepl_p_anim <- lapply(steplength_per_animal,mean)
 (mean(unlist(mean_stepl_p_anim)))
 ```
 
-The mean step length is approx. 300 m. Now use this to bufer the MCPs.
+The mean step length is approx. 300 m. Now use this value to buffer the MCPs.
 
 ```{r}
 # for using mcp() in {adehabitatHR}, convert to SpatialPointsDataframe of {sp}
@@ -202,7 +194,7 @@ st_write(obj = mcp_buf,
          delete_layer = TRUE)
 ```
 
-## c) clip the home ranges with the land use
+## c) 
 
 ```{r}
 # check the total area of the buffer in km2 per animal:
@@ -232,7 +224,19 @@ round((forest/buf_area*100),0)
 spatjoin <- st_join(animals,lc_32633)
 myres <- table(spatjoin$NS1,spatjoin$ID)
 myres
+
+# now divide that by the total number of locations per animal
+myn <- table(animals$ID)
+
+round((myres[1,]/myn*100),0)  # agriculture
+round((myres[2,]/myn*100),0)  # forest
+
+# compare the values with the percentages above
 ```
+
+For example, animal 1 had 71% of agriculture and 29% of forest in its HR, 
+however, only 25% of the locations were actually in agriculture, but 75% of
+its locations were in forest. We could conclude that animal 1 avoids agriculture.
 
 
 # END
