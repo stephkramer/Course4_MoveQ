@@ -53,7 +53,8 @@ After loading libraries, the data and making a plot, please do the following:
 a) Calculate their home ranges.
 b) Buffer the home range with the mean displacement per step of all three animals
 c) Clip the home ranges with the underlying landscape and calculate the percentage
-of land use classes within the home range (hint: use st_intersection)
+of land use classes 2/ agriculture and 3/ forest within the home range (hint: use st_intersection)
+d) In which land use are the animals actually ? Extract underlying land use. 
 
 
 
@@ -153,7 +154,7 @@ tm_shape(shp = rivers[,1]) +
 ```
 
 
-# a) & b)
+## a) & b)
 First , we retrieve the steplength. For this, transform the sf-Object into a move-Object.
 
 ```{r}
@@ -175,7 +176,7 @@ mean_stepl_p_anim <- lapply(steplength_per_animal,mean)
 (mean(unlist(mean_stepl_p_anim)))
 ```
 
-The mean step length is approx. 300 m.
+The mean step length is approx. 300 m. Now use this to bufer the MCPs.
 
 ```{r}
 # for using mcp() in {adehabitatHR}, convert to SpatialPointsDataframe of {sp}
@@ -201,23 +202,37 @@ st_write(obj = mcp_buf,
          delete_layer = TRUE)
 ```
 
-c) clip the home ranges with the land use
+## c) clip the home ranges with the land use
 
 ```{r}
-# check the total area of the buffer in km2:
+# check the total area of the buffer in km2 per animal:
 buf_area <- st_area(mcp_buf)/1e6
 
-# clip
+# clip with land use
 mcp_buf_lc <- st_intersection(lc_32633, mcp_buf) 
 # have a look at the object:
 mcp_buf_lc
+# take care, you have to recalculate the area!
+mcp_buf_lc$areakm2 <- st_area(mcp_buf_lc)/1e6
 
-# now, for each animal id, summarize the area per NS1-category:
-tapply(mcp_buf_lc$AREA,mcp_buf_lc$id,sum)
+# now, for each animal id, summarize the area per NS1-category 2 and 3:
+agri   <- tapply(mcp_buf_lc$areakm2[mcp_buf_lc$NS1 == 2],
+               mcp_buf_lc$id[mcp_buf_lc$NS1 == 2],sum)
+forest <- tapply(mcp_buf_lc$areakm2[mcp_buf_lc$NS1 == 3],
+                 mcp_buf_lc$id[mcp_buf_lc$NS1 == 3],sum)
 
+# percentages
+round((agri/buf_area*100),0)
+round((forest/buf_area*100),0)
 
 ```
 
+## d)
+```{r}
+spatjoin <- st_join(animals,lc_32633)
+myres <- table(spatjoin$NS1,spatjoin$ID)
+myres
+```
 
 
 # END
