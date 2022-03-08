@@ -41,7 +41,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 #or on GUI: knit -> knit directory -> project directory
 ```
 
-#  Exercise 4
+#  Course 4
 
 ## Exercise 4.2
 
@@ -54,8 +54,9 @@ Land use has a column `NS1` with coded info on `1` (urban areas), `2` (agricultu
 After loading the necessary libraries, the data and making a plot, please do the following:<br>
 
 * a. Calculate their home ranges.<br>
-* b. Buffer the home range with the mean displacement per step of all three animals.<br>
-* c. Clip the home ranges with the underlying landscape and calculate the percentage of land use classes 2 (agriculture) and 2 (forest) within the home range (hint: use `st_intersection()`).<br>
+* b. Buffer the home range with the mean steplength of all three animals.<br>
+* c. Clip the home ranges with the underlying landscape and calculate the percentage of land use classes 2 (agriculture) and 2 (forest) within the home range (hint: use `st_intersection()`  AND
+recalculate the column for AREA in km2).<br>
 * d. In which land use are the animals actually located? Extract land use underneath each telemetry location (hint: `st_join()`). Do the animals actually avoid agriculture?
 <br><br>
 
