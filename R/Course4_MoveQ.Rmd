@@ -44,7 +44,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 
 # Introduction
 
-To start with, I would like to express my deep thanks to Cedric Scherer for his help setting up, discussing and ameliorating the course scripts. <br>
+To start with, I would like to express my deep thanks to Cedric Scherer for his help in designing and ameliorating the course scripts. <br>
 
 In this tutorial, we will show you how to get started with (real) animal movement data. 
 To put it simple, animal movement data are just points in time and space, i.e. re-locations
@@ -136,7 +136,7 @@ If you start with your own R-project, I strongly recommend to use the [`{d6}`-pa
 Cedric Scherer provided. This package automatically sets up the ideal folder structure:
 https://github.com/EcoDynIZW/d6
 
-In any case, my course folder has the following structure:  
+In any case, the course folder has the following structure:  
 
 ```{text}
 .
@@ -442,10 +442,10 @@ Check your output folder for these files. The efficient '.Rds' file storage
 is about 3 times smaller than the '.csv' file. 
 <br>
 
-# <span class='exercise'>Exercise 1</span>
+# <span class='exercise'>Exercise 4.1</span>
 
 **This is a recap from Course2. Please plot the animal relocations in two different 
-colours based on the column `daytime`, using the *data.frame* and one of 
+colours based on the column `daytime`, using one of 
 the options to create maps with `{ggplot2}`, `{ggpmap}`, `{leaflet}` or `{tmap}`.
 Use the processed file of fox Q (*tag5334_gps_proc*) and do it in a separate script. 
 Save your script as `Course4_Exercise1_*yourname*.R`.
@@ -484,10 +484,10 @@ ggplot(anim_proc, aes(date)) +
 # plot(table(anim_proc$date))
 ```
 
-Now let'splot the *Julian day*, `yearday`:
+Now let's plot the *Julian day*, `yearday`:
 
 ```{r}
-plot(table(anim_proc$yearday))  ## what is the difference?
+plot(table(anim_proc$yearday))  ## what is the difference to the plot above?
 ```
 
 The number of fixes (locations taken) per day seems to be quite regular. Mind the 
@@ -531,6 +531,9 @@ ggplot(anim_proc, aes(x = hour,fill = daytime)) +
   scale_x_continuous(breaks = 0:23) +
   scale_fill_brewer(palette = "Set2", name = NULL, labels = c("Night", "Day")) +
   labs(x = NULL, y = "Count", title = "Events by Time of the Day")
+
+ggsave(filename = 'plot_activity.png', path=here('plots'), 
+       width = 10, height = 10, units = "cm")
 ```
 
 Apart from the outliers between 11 and 13 o'clock, the active phase was
@@ -841,12 +844,9 @@ plot_ly(z = myz, type = "surface") # click into plot and on icon 'turntable rota
 
 # Nothing makes sense but in the light of environmental information
 
--> Exercise 4.2
+-> go to
 
-# Exercise 4.2
-
-
-
+## Exercise 4.2
 
 
 ```{r, eval=FALSE, echo=FALSE, results='hide'}
@@ -961,6 +961,8 @@ title(expression("weighted OUF AKDE"["C"]))
 library(amt)
 #continue with SSFs for selection analysis
 #https://cran.r-project.org/web/packages/amt/vignettes/p4_SSF.html
+
+# or discuss our paper Schlaegel et al. in prep.
 
 ############################################################################################
 ########## animate movement path with moveVis - take care, takes a lot of computation time !
