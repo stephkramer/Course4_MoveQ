@@ -43,9 +43,9 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 
 #  Exercise 4
 
-## Exercise 4.3
+## Exercise 4.2
 
-**Three animals have been collared and tracked, and we want to know their home range size and whether the animals actually avoid agriculture and prefer forest. <br>
+**Animals have been collared and tracked, and we want to know their home range size and whether the animals actually avoid agriculture and prefer forest. <br>
 There is telemetry data available from three animals (`DieTiere_32633.shp`) in the
 folder data-raw. Additionally, land cover (`Landnutzung_3035.shp`) and rivers (`linearegew_32633.shp`) are available in the `geo-raw` folder. 
 Land use has a column `NS1` with coded info on `1` (urban areas), `2` (agriculture), 
@@ -106,19 +106,7 @@ lc_32633 <- st_transform(landcov, 32633)
 
 Make a plot of the data:
 
-```{r}
-## Create a color code for the 5 land use classes
-land_cols <- c("red", "antiquewhite", "chartreuse4", "cornsilk4", "blue")
-
-## TODO - argh, Punkte und Linien erscheinen nicht im html.... 
-## CED: Hab leider keinen Schimmer von base pltos... ggplot for the rescue?
-
-plot(lc_32633[,"NS1"], col = land_cols[lc_32633$NS1], border = "transparent")
-plot(animals[,1], col = animals$ID, add = TRUE) 
-plot(rivers[,1], col = 'blue', lwd = 0.1, add = TRUE)
-```
-
-*ggplot2:*
+**ggplot2:**
 
 ```{r}
 ## Create a color code for the 5 land use classes
@@ -170,7 +158,7 @@ animals_ng <- st_drop_geometry(animals)
 
 animals_move <- move(x = animals_ng$X, y = animals_ng$Y,
                      time = as.POSIXct(animals_ng$MYDATUM, 
-                                       format = "%Y-%m-%d 8:0:0", tz = "CET"), ## CED: Puh, das ist aber komplex... geht's nicht iwie einfacher, z.B. mit lubridate?
+                                       format = "%Y-%m-%d 8:0:0", tz = "CET"), 
                      proj = CRS("+init=epsg:32633"),
                      data = animals_ng, animal = animals_ng$ID, sensor = "GPS")
 ```
@@ -236,7 +224,7 @@ mcp_buf_lc
 mcp_buf_lc$areakm2 <- st_area(mcp_buf_lc) / 1e6
 
 ## now, for each animal id, summarize the area per NS1-category 2 and 3:
-agri   <- tapply(mcp_buf_lc$areakm2[mcp_buf_lc$NS1 == 2], ## CED: Das können wir wohl von denen nicht erwarten oder??
+agri   <- tapply(mcp_buf_lc$areakm2[mcp_buf_lc$NS1 == 2], 
                  mcp_buf_lc$id[mcp_buf_lc$NS1 == 2], 
                  FUN = sum)
 
