@@ -1,5 +1,5 @@
 # Course4_MoveQ
- Introduction to movement data analysis. Follow 'Q von Stralau' ... <br>
+ Introduction to movement data analysis. Follow 'Q von Stralau' here: [Intro to working with telemetry data](https://stephkramer.github.io/Course4_MoveQ.html).... <br>
  <br>
 <img src="fox_Q_20190113_sks.jpg" alt="fox Q, photo by S-KS" width="300"/>
 
