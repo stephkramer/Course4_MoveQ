@@ -1,5 +1,5 @@
 ---
-title: "Tutorial Part IV - Movement - Solution Exercise 2"
+title: "Tutorial Part IV - Movement - Exercise 2"
 author: "Stephanie Kramer-Schadt & Cédric Scherer"
 date: "`r Sys.setlocale('LC_TIME','C'); paste('Last Update', format(Sys.time(), '%B %e, %Y'))`"
 output:
@@ -43,7 +43,7 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE,
 
 #  Course 4
 
-## Exercise 4.2
+## Exercise 2
 
 **Animals have been collared and tracked, and we want to know their home range size and whether the animals actually avoid agriculture and prefer forest. <br>
 There is telemetry data available from three animals (`DieTiere_32633.shp`) in the
