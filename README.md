@@ -9,7 +9,7 @@ More exercises here:
 
 
 <p float="left">
-<img src="fox_Q_20190113_sks.jpg" alt="fox Q, photo by S-KS" width="300"/>
+<img src="fox_Q_20190113_sks.jpg" alt="fox Q, photo by S-KS" width="250"/>
 <img src="plots/plot_pointdensity.png" width="200" />
 <img src="plots/plot_activity.png" width="200" />
 </p>
